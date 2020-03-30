@@ -23,13 +23,14 @@
 #include "scene.h"
 
 #include <algorithm>
+#include <iterator>
 
 namespace tinyrt {
 namespace {
 static std::vector<Triangle> makeTriangles(
     const Scene& scene, const std::vector<Triangle::indices_t>& triangles) {
-  std::vector<Triangle> out(triangles.size());
-  std::transform(triangles.begin(), triangles.end(), out.begin(),
+  std::vector<Triangle> out;
+  std::transform(triangles.begin(), triangles.end(), std::back_inserter(out),
                  [scene](const Triangle::indices_t& indices) {
                    return Triangle(scene, indices);
                  });
@@ -37,11 +38,26 @@ static std::vector<Triangle> makeTriangles(
 }
 }  // namespace
 
+Triangle::Triangle(const Scene& scene, const indices_t& indices)
+    : scene_(scene), indices_(indices) {}
+
+const Vec3& Triangle::vertex(const size_t idx) const {
+  return scene_.vertices_[indices_[idx][VERTEX]];
+}
+
+const Vec3& Triangle::texcoord(const size_t idx) const {
+  return scene_.texcoords_[indices_[idx][TEXCOORD]];
+}
+
+const Vec3& Triangle::normal(const size_t idx) const {
+  return scene_.normals_[indices_[idx][NORMAL]];
+}
+
 Scene::Scene(std::vector<Vec3> vertices, std::vector<Vec3> texcoords,
              std::vector<Vec3> normals,
              const std::vector<Triangle::indices_t>& triangles)
     : vertices_(std::move(vertices)),
-      texcoords_(std::move(texcoords_)),
+      texcoords_(std::move(texcoords)),
       normals_(std::move(normals)),
       triangles_(makeTriangles(*this, triangles)) {}
 }  // namespace tinyrt

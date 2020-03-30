@@ -23,6 +23,7 @@
 #pragma once
 
 #include <cmath>
+#include <iostream>
 
 namespace tinyrt {
 class Vec3 {
@@ -75,7 +76,15 @@ class Vec3 {
 
   inline float norm2() const { return v_.x * v_.x + v_.y * v_.y + v_.z * v_.z; }
   inline float norm() const { return std::sqrt(norm2()); }
-  inline void normalize() { *this /= norm(); }
+  inline Vec3& normalize() {
+    *this /= norm();
+    return *this;
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
+    os << "Vec3{x=" << vec->x << ",y=" << vec->y << ",z=" << vec->z << "}";
+    return os;
+  }
 
  private:
   union {

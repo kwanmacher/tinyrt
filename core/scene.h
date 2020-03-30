@@ -35,20 +35,11 @@ class Triangle final {
   using indices_t = std::array<std::array<unsigned, 3>, 3>;
 
  public:
-  Triangle(const Scene& scene, const indices_t& indices)
-      : scene_(scene), indices_(indices) {}
+  Triangle(const Scene& scene, const indices_t& indices);
 
-  const Vec3& vertex(const size_t idx) const {
-    return scene_.vertices_[indices_[idx][VERTEX]];
-  }
-
-  const Vec3& texcoord(const size_t idx) const {
-    return scene_.texcoords_[indices_[idx][TEXCOORD]];
-  }
-
-  const Vec3& normal(const size_t idx) const {
-    return scene_.normals_[indices_[idx][NORMAL]];
-  }
+  const Vec3& vertex(const size_t idx) const;
+  const Vec3& texcoord(const size_t idx) const;
+  const Vec3& normal(const size_t idx) const;
 
  private:
   enum Index { VERTEX, TEXCOORD, NORMAL };
