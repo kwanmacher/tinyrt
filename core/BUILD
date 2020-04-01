@@ -24,11 +24,6 @@ package(default_visibility = ["//visibility:public"])
 
 cc_library(
     name = "core",
-    srcs = [
-        "scene.cc",
-    ],
-    hdrs = [
-        "scene.h",
-        "vec3.h",
-    ],
+    srcs = glob(["**/*.cc"]),
+    hdrs = glob(["**/*.h"]),
 )

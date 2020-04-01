@@ -25,14 +25,14 @@
 #include <array>
 #include <vector>
 
-#include "vec3.h"
+#include "core/vec3.h"
 
 namespace tinyrt {
 class Scene;
 
 class Triangle final {
  public:
-  using indices_t = std::array<std::array<unsigned, 3>, 3>;
+  using indices_t = std::array<std::array<int32_t, 3>, 3>;
 
  public:
   Triangle(const Scene& scene, const indices_t& indices);
@@ -54,6 +54,8 @@ class Scene final {
   Scene(std::vector<Vec3> vertices, std::vector<Vec3> texcoords,
         std::vector<Vec3> normals,
         const std::vector<Triangle::indices_t>& triangles);
+  Scene(const Scene&) = delete;
+  Scene& operator=(const Scene&) = delete;
 
  private:
   friend class Triangle;

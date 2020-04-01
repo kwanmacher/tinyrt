@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "scene.h"
+#include "core/scene.h"
 
 #include <algorithm>
 #include <iterator>
@@ -31,7 +31,7 @@ static std::vector<Triangle> makeTriangles(
     const Scene& scene, const std::vector<Triangle::indices_t>& triangles) {
   std::vector<Triangle> out;
   std::transform(triangles.begin(), triangles.end(), std::back_inserter(out),
-                 [scene](const Triangle::indices_t& indices) {
+                 [&scene](const Triangle::indices_t& indices) {
                    return Triangle(scene, indices);
                  });
   return out;

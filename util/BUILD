@@ -20,11 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-cc_binary(
-    name = "tinyrt",
-    srcs = ["main.cc"],
-    deps = [
-        "//core",
-        "//util",
-    ],
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "util",
+    srcs = glob(["**/*.cc"]),
+    hdrs = glob(["**/*.h"]),
 )

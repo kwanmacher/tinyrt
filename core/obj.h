@@ -20,26 +20,34 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <iostream>
+#pragma once
 
-#include "core/obj.h"
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "core/scene.h"
 #include "core/vec3.h"
-#include "util/flag.h"
 
-using namespace tinyrt;
+namespace tinyrt {
+class Obj final {
+ public:
+  explicit Obj(const std::string& path);
+  Obj(const Obj&) = delete;
+  Obj& operator=(const Obj&) = delete;
 
-constexpr auto* kCornellBoxPath = "cornellbox.obj";
+  std::unique_ptr<Scene> toScene() const&;
+  std::unique_ptr<Scene> moveToScene() &&;
 
-int main(int argc, char** argv) {
-  char*[] argv = {"blaze", "hello", "world"};
-  Flag<String<"hello", "">> flags(2, argv);
-  flags.dump();
+  friend std::ostream& operator<<(std::ostream& os, const Obj& obj);
 
-  Vec3 a(1.f, 2.f, 3.f);
-  Vec3 b(3.f, 4.5, 6.f);
-  std::cout << "Vec3 result=" << a.cross(b).normalize().dot(b) << std::endl;
+ public:
+  using face_indices_t = std::vector<std::array<int32_t, 3>>;
 
-  Obj cornellBox(kCornellBoxPath);
-  std::cout << "OBJ result=" << cornellBox << std::endl;
-  return 0;
-}
+ private:
+  std::vector<Vec3> vertices_;
+  std::vector<Vec3> texcoords_;
+  std::vector<Vec3> normals_;
+  std::vector<face_indices_t> faces_;
+};
+}  // namespace tinyrt
