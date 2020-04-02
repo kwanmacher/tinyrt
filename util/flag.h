@@ -22,60 +22,77 @@
 
 #pragma once
 
+#include <optional>
+#include <sstream>
 #include <string_view>
 #include <tuple>
-#include <utility>
 
 namespace tinyrt {
-class ConstString final {
-  const char* p;
-  const std::size_t sz;
+constexpr char kEmpty[] = "";
 
- public:
-  template <std::size_t N>
-  constexpr ConstString(const char (&a)[N]) : p(a), sz(N - 1) {}
-
-  constexpr char operator[](std::size_t n) const {
-    return n < sz ? p[n] : throw std::out_of_range("");
-  }
-  constexpr std::size_t size() const { return sz; }
-
-  //   bool operator==(char* other) const {
-  //     auto* str = p;
-  //     while (str && other && *(str++) == *(other++))
-  //       ;
-  //     return !str && !other;
-  //   }
-};
-
-template <ConstString Name, typename T, T Default>
-struct FlagSpec {
+template <const char* Name, typename T, T Default>
+struct Flag {
   using type = T;
-  static constexpr ConstString kName = Name;
+  static constexpr auto kName = std::string_view(Name);
   static constexpr T kDefault = Default;
+  std::optional<T> value;
 };
 
-template <ConstString, ConstString Default>
-using String = FlagSpec<Name, ConstString, Default>;
+template <const char* Name, const char* Default = kEmpty>
+struct String final : public Flag<Name, const char*, Default> {
+  static const auto* convert(const char* arg) { return arg; }
+};
+
+template <const char* Name, int Default = 0>
+struct Int final : public Flag<Name, int, Default> {
+  static int convert(const char* arg) { return std::atoi(arg); }
+};
+
+template <const char* Name, bool Default = false>
+struct Bool final : public Flag<Name, bool, Default> {
+  static bool convert(const char* arg) {
+    bool ret;
+    std::istringstream argStream(arg);
+    argStream >> std::boolalpha >> ret;
+    return ret;
+  }
+};
 
 template <typename... T>
-class Flag final {
+class Flags final {
  public:
-  explicit Flag(int argc, char* argv[]) {
+  explicit Flags(const int argc, const char* argv[]) {
     for (auto i = 1; i < argc; i += 2) {
-      set(argv[i], argv[i + 1], std::make_index_sequence<sizeof(T)>{});
+      set(argv[i], argv[i + 1], std::make_index_sequence<sizeof...(T)>{});
     }
   }
 
-  template <std::size_t... I>
-  void set(char* argName, char* argValue, std::index_sequence<I...>) {
-    (
-        if (T::kName == argName) { std::get<I>(flags_) = argValue; }, ...);
+  template <const char* Arg, std::size_t I = 0>
+  auto get() const {
+    using arg_t = typename std::tuple_element<I, decltype(flags_)>::type;
+    if constexpr (arg_t::kName == Arg) {
+      const auto& value = std::get<I>(flags_).value;
+      return value ? *value : arg_t::kDefault;
+    } else {
+      return get<Arg, I + 1>();
+    }
   }
 
-  void dump() { std::cout << std::get<0>(flags_); }
+ private:
+  template <std::size_t... I>
+  void set(const char* argName, const char* argValue,
+           std::index_sequence<I...>) {
+    (
+        [&] {
+          if (T::kName == argName) {
+            std::get<I>(flags_).value = T::convert(argValue);
+          }
+          return 0;
+        }(),
+        ...);
+  }
 
  private:
-  std::tuple<T::type...> flags_;
+  std::tuple<T...> flags_;
 };
 }  // namespace tinyrt

@@ -27,19 +27,18 @@
 #include "util/flag.h"
 
 using namespace tinyrt;
+using namespace std::literals;
 
-constexpr auto* kCornellBoxPath = "cornellbox.obj";
+constexpr char kOBJPath[] = "-obj";
 
-int main(int argc, char** argv) {
-  char*[] argv = {"blaze", "hello", "world"};
-  Flag<String<"hello", "">> flags(2, argv);
-  flags.dump();
+int main(const int argc, const char** argv) {
+  Flags<String<kOBJPath>> flags(argc, argv);
 
   Vec3 a(1.f, 2.f, 3.f);
   Vec3 b(3.f, 4.5, 6.f);
   std::cout << "Vec3 result=" << a.cross(b).normalize().dot(b) << std::endl;
 
-  Obj cornellBox(kCornellBoxPath);
+  Obj cornellBox(flags.get<kOBJPath>());
   std::cout << "OBJ result=" << cornellBox << std::endl;
   return 0;
 }
