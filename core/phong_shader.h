@@ -20,15 +20,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "core/triangle.h"
+#pragma once
+
+#include "core/shader.h"
 
 namespace tinyrt {
-Triangle::Triangle(const std::array<Vertex, 3>& vertices)
-    : vertices_(vertices) {}
-
-std::ostream& operator<<(std::ostream& os, const Triangle& triangle) {
-  os << "Triangle{a=" << triangle.a() << ", b=" << triangle.b()
-     << ", c=" << triangle.c() << "}";
-  return os;
-}
+class PhongShader : public Shader {
+ public:
+  Color shade(const Intersection& intersection, const Light& light) override {
+    const auto l = (light.position - intersection.position).normalize();
+    const auto r = -l.reflect(intersection.normal);
+    const auto v = -intersection.ray.direction;
+    Color lumination = light.diffuse * l.dot(intersection.normal);
+    if (!light.specular.isSmall()) {
+      lumination = lumination + light.specular * std::pow(r.dot(v), 10);
+    }
+    return lumination;
+  }
+};
 }  // namespace tinyrt

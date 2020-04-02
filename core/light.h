@@ -20,15 +20,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "core/triangle.h"
+#pragma once
+
+#include "core/vec3.h"
 
 namespace tinyrt {
-Triangle::Triangle(const std::array<Vertex, 3>& vertices)
-    : vertices_(vertices) {}
-
-std::ostream& operator<<(std::ostream& os, const Triangle& triangle) {
-  os << "Triangle{a=" << triangle.a() << ", b=" << triangle.b()
-     << ", c=" << triangle.c() << "}";
-  return os;
-}
+struct Light {
+  Vec3 position;
+  Vec3 diffuse;
+  Vec3 specular;
+};
 }  // namespace tinyrt

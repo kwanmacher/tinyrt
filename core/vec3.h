@@ -36,6 +36,8 @@ class Vec3 {
   inline float& operator[](int idx) { return coords_[idx]; }
   inline const float& operator[](int idx) const { return coords_[idx]; }
 
+  inline Vec3 operator-() const { return Vec3(-v_.x, -v_.y, -v_.z); }
+
   inline Vec3 operator+(const Vec3& other) const {
     return Vec3(v_.x + other->x, v_.y + other->y, v_.z + other->z);
   }
@@ -70,15 +72,36 @@ class Vec3 {
 
   inline Vec3 cross(const Vec3& other) const {
     return Vec3(v_.y * other->z - v_.z * other->y,
-                v_.z * other->x - v_.z * other->x,
+                v_.z * other->x - v_.x * other->z,
                 v_.x * other->y - v_.y * other->x);
   }
 
   inline float norm2() const { return v_.x * v_.x + v_.y * v_.y + v_.z * v_.z; }
   inline float norm() const { return std::sqrt(norm2()); }
-  inline Vec3& normalize() {
+  inline Vec3& normalize() & {
     *this /= norm();
     return *this;
+  }
+
+  inline Vec3 normalize() const& {
+    Vec3 normalized = *this;
+    return normalized.normalize();
+  }
+
+  inline Vec3 reflect(const Vec3& normal) const {
+    return *this - normal * 2 * this->dot(normal);
+  }
+
+  inline bool isZero() const {
+    const float kEpsilon = 1e-6f;
+    return std::abs(v_.x) < kEpsilon && std::abs(v_.y) < kEpsilon &&
+           std::abs(v_.z) < kEpsilon;
+  }
+
+  inline bool isSmall() const {
+    const float kEpsilon = 1e-3f;
+    return std::abs(v_.x) < kEpsilon && std::abs(v_.y) < kEpsilon &&
+           std::abs(v_.z) < kEpsilon;
   }
 
   friend std::ostream& operator<<(std::ostream& os, const Vec3& vec) {

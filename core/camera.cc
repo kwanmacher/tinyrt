@@ -20,15 +20,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "core/triangle.h"
+#include "core/camera.h"
 
 namespace tinyrt {
-Triangle::Triangle(const std::array<Vertex, 3>& vertices)
-    : vertices_(vertices) {}
 
-std::ostream& operator<<(std::ostream& os, const Triangle& triangle) {
-  os << "Triangle{a=" << triangle.a() << ", b=" << triangle.b()
-     << ", c=" << triangle.c() << "}";
-  return os;
+const double kPI = std::acos(-1);
+
+Camera::Camera(const Vec3& position, const Vec3& direction, const Vec3& up,
+               const float fov)
+    : position_(position),
+      direction_(direction.normalize()),
+      up_(up.normalize()),
+      fov_(fov) {}
+
+std::function<Ray(unsigned, unsigned)> Camera::adapt(
+    const unsigned width, const unsigned height) const {
+  const auto aspectRatio = width * 1.f / height;
+  const auto left = direction_.cross(up_);
+  const auto fov = direction_.norm() * std::tan(fov_ / 360 * kPI);
+  const auto adaptedUp = up_ * fov;
+  const auto adaptedLeft = left * (fov * aspectRatio);
+  const auto topLeft = position_ + direction_ - adaptedUp - adaptedLeft;
+  const auto xbasis = -adaptedLeft * 2.f / width;
+  const auto ybasis = -adaptedUp * 2.f / height;
+  std::cout << "topLeft " << topLeft << ", x " << xbasis << ", y " << ybasis;
+  return
+      [position = position_, topLeft, xbasis, ybasis](unsigned x, unsigned y) {
+        return Ray(position, topLeft + xbasis * x + ybasis * y - position);
+      };
 }
 }  // namespace tinyrt

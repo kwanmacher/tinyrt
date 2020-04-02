@@ -61,7 +61,11 @@ Scene::Scene(std::vector<Vec3> vertices, std::vector<Vec3> texcoords,
     : vertices_(std::move(vertices)),
       texcoords_(std::move(texcoords)),
       normals_(std::move(normals)),
-      triangles_(makeTriangles(vertices_, texcoords_, normals_, triangles)) {}
+      triangles_(makeTriangles(vertices_, texcoords_, normals_, triangles)) {
+  for (auto& triangle : triangles_) {
+    std::cout << *triangle << std::endl;
+  }
+}
 
 const std::vector<std::unique_ptr<Triangle>>& Scene::triangles() const {
   return triangles_;

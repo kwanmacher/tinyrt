@@ -23,6 +23,7 @@
 #pragma once
 
 #include <array>
+#include <iostream>
 
 #include "core/vec3.h"
 
@@ -34,6 +35,17 @@ struct Vertex final {
 
   Vertex(const Vec3& coord, const Vec3* texcoord, const Vec3& normal)
       : coord(coord), texcoord(texcoord), normal(normal) {}
+
+  friend std::ostream& operator<<(std::ostream& os, const Vertex& vertex) {
+    os << "Vertex{coord=" << vertex.coord << ", texcoord=";
+    if (vertex.texcoord) {
+      os << *vertex.texcoord;
+    } else {
+      os << "none";
+    }
+    os << ", normal=" << vertex.normal << "}";
+    return os;
+  }
 };
 
 class Triangle final {
@@ -42,9 +54,11 @@ class Triangle final {
   Triangle(const Triangle&) = delete;
   Triangle& operator=(const Triangle&) = delete;
 
-  inline const Vertex& a() const;
-  inline const Vertex& b() const;
-  inline const Vertex& c() const;
+  inline const Vertex& a() const { return vertices_[0]; }
+  inline const Vertex& b() const { return vertices_[1]; }
+  inline const Vertex& c() const { return vertices_[2]; }
+
+  friend std::ostream& operator<<(std::ostream& os, const Triangle& triangle);
 
  private:
   const std::array<Vertex, 3> vertices_;

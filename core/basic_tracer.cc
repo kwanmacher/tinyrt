@@ -20,15 +20,26 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "core/triangle.h"
+#include "core/basic_tracer.h"
+
+#include <exception>
+
+#include "core/intersect.h"
 
 namespace tinyrt {
-Triangle::Triangle(const std::array<Vertex, 3>& vertices)
-    : vertices_(vertices) {}
+void BasicTracer::initialize(const Scene& scene) { scene_ = &scene; }
 
-std::ostream& operator<<(std::ostream& os, const Triangle& triangle) {
-  os << "Triangle{a=" << triangle.a() << ", b=" << triangle.b()
-     << ", c=" << triangle.c() << "}";
-  return os;
+std::optional<Intersection> BasicTracer::trace(const Ray& ray) {
+  if (!scene_) {
+    throw std::runtime_error("Must initialize with a scene first!");
+  }
+  std::optional<Intersection> intersection;
+  for (const auto& triangle : scene_->triangles()) {
+    auto candidate = intersect(ray, *triangle);
+    if (candidate && (!intersection || intersection->time > candidate->time)) {
+      intersection = candidate;
+    }
+  }
+  return intersection;
 }
 }  // namespace tinyrt

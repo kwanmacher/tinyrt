@@ -20,15 +20,38 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#pragma once
+
+#include "core/tracer.h"
 #include "core/triangle.h"
 
 namespace tinyrt {
-Triangle::Triangle(const std::array<Vertex, 3>& vertices)
-    : vertices_(vertices) {}
-
-std::ostream& operator<<(std::ostream& os, const Triangle& triangle) {
-  os << "Triangle{a=" << triangle.a() << ", b=" << triangle.b()
-     << ", c=" << triangle.c() << "}";
-  return os;
+std::optional<Intersection> intersect(const Ray& ray,
+                                      const Triangle& triangle) {
+  const float EPSILON = 1e-6f;
+  auto ab = triangle.b().coord - triangle.a().coord;
+  auto ac = triangle.c().coord - triangle.a().coord;
+  auto h = ray.direction.cross(ac);
+  auto a = ab.dot(h);
+  if (a > -EPSILON && a < EPSILON) {
+    return std::nullopt;
+  }
+  auto f = 1.f / a;
+  auto s = ray.origin - triangle.a().coord;
+  auto u = f * s.dot(h);
+  if (u < 0.0 || u > 1.0) {
+    return std::nullopt;
+  }
+  auto q = s.cross(ab);
+  auto v = f * ray.direction.dot(q);
+  if (v < 0.0 || u + v > 1.0) {
+    return std::nullopt;
+  }
+  float t = f * ac.dot(q);
+  if (t <= EPSILON) {
+    return std::nullopt;
+  }
+  // TODO(kaikai): Normal interpolation.
+  return Intersection(ray, t, triangle.a().normal);
 }
 }  // namespace tinyrt

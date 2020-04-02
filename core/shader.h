@@ -20,15 +20,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "core/triangle.h"
+#pragma once
+
+#include "core/light.h"
+#include "core/tracer.h"
 
 namespace tinyrt {
-Triangle::Triangle(const std::array<Vertex, 3>& vertices)
-    : vertices_(vertices) {}
+using Color = Vec3;
 
-std::ostream& operator<<(std::ostream& os, const Triangle& triangle) {
-  os << "Triangle{a=" << triangle.a() << ", b=" << triangle.b()
-     << ", c=" << triangle.c() << "}";
-  return os;
-}
+class Shader {
+ public:
+  virtual ~Shader() = default;
+  virtual Color shade(const Intersection& intersection, const Light& light) = 0;
+};
 }  // namespace tinyrt

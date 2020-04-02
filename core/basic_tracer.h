@@ -20,15 +20,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "core/triangle.h"
+#pragma once
+
+#include "core/tracer.h"
 
 namespace tinyrt {
-Triangle::Triangle(const std::array<Vertex, 3>& vertices)
-    : vertices_(vertices) {}
+class BasicTracer final : public Tracer {
+ public:
+  void initialize(const Scene& scene) override;
+  std::optional<Intersection> trace(const Ray& ray) override;
 
-std::ostream& operator<<(std::ostream& os, const Triangle& triangle) {
-  os << "Triangle{a=" << triangle.a() << ", b=" << triangle.b()
-     << ", c=" << triangle.c() << "}";
-  return os;
-}
+ private:
+  const Scene* scene_;
+};
 }  // namespace tinyrt

@@ -30,12 +30,22 @@ namespace tinyrt {
 struct Ray {
   Vec3 origin;
   Vec3 direction;
+
+  Ray(const Vec3& origin, const Vec3& direction)
+      : origin(origin), direction(direction.normalize()) {}
 };
 
 struct Intersection {
   Ray ray;
   float time;
+  Vec3 position;
   Vec3 normal;
+
+  Intersection(const Ray& ray, const float time, const Vec3& normal)
+      : ray(ray),
+        time(time),
+        position(ray.origin + ray.direction * time),
+        normal(normal) {}
 };
 
 class Tracer {

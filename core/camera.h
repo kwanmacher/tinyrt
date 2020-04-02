@@ -20,15 +20,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "core/triangle.h"
+#pragma once
+
+#include <functional>
+
+#include "core/tracer.h"
 
 namespace tinyrt {
-Triangle::Triangle(const std::array<Vertex, 3>& vertices)
-    : vertices_(vertices) {}
+class Camera final {
+ public:
+  Camera(const Vec3& position, const Vec3& direction, const Vec3& up,
+         const float fov);
+  std::function<Ray(unsigned, unsigned)> adapt(const unsigned width,
+                                               const unsigned height) const;
 
-std::ostream& operator<<(std::ostream& os, const Triangle& triangle) {
-  os << "Triangle{a=" << triangle.a() << ", b=" << triangle.b()
-     << ", c=" << triangle.c() << "}";
-  return os;
-}
+ private:
+  const Vec3 position_;
+  const Vec3 direction_;
+  const Vec3 up_;
+  const float fov_;
+};
 }  // namespace tinyrt
