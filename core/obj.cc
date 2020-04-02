@@ -61,13 +61,13 @@ static auto loadObj(const std::string& path) {
         }
       } break;
       case 'f': {
-        Obj::face_indices_t faces;
+        auto& face = faces.emplace_back();
         std::string vertex;
         while (lineStream >> vertex) {
           std::istringstream vertexStream(vertex);
           size_t idx = 0;
           std::string component;
-          auto& face = *(faces.insert(faces.cend(), {-1}));
+          auto& vertex = *face.insert(face.cend(), {-1});
           while (std::getline(vertexStream, component, '/')) {
             if (!component.empty()) {
               int value = std::stoi(component);
@@ -76,10 +76,10 @@ static auto loadObj(const std::string& path) {
               } else {
                 --value;
               }
-              if (value >= vectors[idx].size() || value < 0) {
+              if (value < 0 || value >= vectors[idx].size()) {
                 throw std::out_of_range("Face index out-of-range!");
               }
-              face[idx] = value;
+              vertex[idx] = value;
             }
             ++idx;
           }
