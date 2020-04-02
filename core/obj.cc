@@ -29,7 +29,6 @@
 namespace tinyrt {
 namespace {
 static auto loadObj(const std::string& path) {
-  enum __VECTYPE { VERTEX, TEXCOORD, NORMAL };
   std::vector<Vec3> vectors[3];
   std::vector<Obj::face_indices_t> faces;
 
@@ -95,13 +94,22 @@ static auto loadObj(const std::string& path) {
 
 static std::unique_ptr<Scene> createScene(
     std::vector<Vec3> vertices, std::vector<Vec3> texcoords,
-    std::vector<Vec3> normals, const std::vector<Obj::face_indices_t>& faces) {
-  std::vector<Triangle::indices_t> triangles;
-  for (const auto& face : faces) {
+    std::vector<Vec3> normals, std::vector<Obj::face_indices_t> faces) {
+  std::vector<triangle_indices_t> triangles;
+  for (auto& face : faces) {
     if (face.size() < 3) {
       throw std::length_error("A face must have at least 3 vertices!");
     } else {
+      const auto& v0 = vertices[face[0][VERTEX]];
       for (auto i = 1; i < face.size() - 1; ++i) {
+        if (face[0][NORMAL] < 0 || face[i][NORMAL] < 0 ||
+            face[i + 1][NORMAL] < 0) {
+          const auto& vi = vertices[face[i][VERTEX]];
+          const auto& vi1 = vertices[face[i + 1][VERTEX]];
+          normals.emplace_back((vi - v0).cross(vi1 - v0).normalize());
+          face[0][NORMAL] = face[i][NORMAL] = face[i + 1][NORMAL] =
+              normals.size() - 1;
+        }
         triangles.push_back({face[0], face[i], face[i + 1]});
       }
     }

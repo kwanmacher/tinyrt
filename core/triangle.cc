@@ -20,32 +20,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#pragma once
-
-#include <memory>
-#include <vector>
-
 #include "core/triangle.h"
-#include "core/vec3.h"
 
 namespace tinyrt {
-using triangle_indices_t = std::array<std::array<int32_t, 3>, 3>;
+Triangle::Triangle(const std::array<Vertex, 3>& vertices)
+    : vertices_(vertices) {}
 
-enum Index { VERTEX, TEXCOORD, NORMAL };
+const Vertex& Triangle::a() const { return vertices_[0]; }
 
-class Scene final {
- public:
-  Scene(std::vector<Vec3> vertices, std::vector<Vec3> texcoords,
-        std::vector<Vec3> normals,
-        const std::vector<triangle_indices_t>& triangles);
-  Scene(const Scene&) = delete;
-  Scene& operator=(const Scene&) = delete;
+const Vertex& Triangle::b() const { return vertices_[1]; }
 
- private:
- private:
-  const std::vector<Vec3> vertices_;
-  const std::vector<Vec3> texcoords_;
-  const std::vector<Vec3> normals_;
-  const std::vector<std::unique_ptr<Triangle>> triangles_;
-};
+const Vertex& Triangle::c() const { return vertices_[2]; }
 }  // namespace tinyrt

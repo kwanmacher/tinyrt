@@ -27,37 +27,39 @@
 
 namespace tinyrt {
 namespace {
-static std::vector<Triangle> makeTriangles(
-    const Scene& scene, const std::vector<Triangle::indices_t>& triangles) {
-  std::vector<Triangle> out;
+static Vertex makeVertex(const std::vector<Vec3>& vertices,
+                         const std::vector<Vec3>& texcoords,
+                         const std::vector<Vec3>& normals,
+                         const std::array<int32_t, 3>& indices) {
+  return Vertex(
+      vertices[indices[VERTEX]],
+      indices[TEXCOORD] >= 0 ? &texcoords[indices[TEXCOORD]] : nullptr,
+      normals[indices[NORMAL]]);
+}
+
+static std::vector<std::unique_ptr<Triangle>> makeTriangles(
+    const std::vector<Vec3>& vertices, const std::vector<Vec3>& texcoords,
+    const std::vector<Vec3>& normals,
+    const std::vector<triangle_indices_t>& triangles) {
+  std::vector<std::unique_ptr<Triangle>> out;
   std::transform(triangles.begin(), triangles.end(), std::back_inserter(out),
-                 [&scene](const Triangle::indices_t& indices) {
-                   return Triangle(scene, indices);
+                 [&](const triangle_indices_t& indices) {
+                   std::array<Vertex, 3> triangleVertices{
+                       makeVertex(vertices, texcoords, normals, indices[0]),
+                       makeVertex(vertices, texcoords, normals, indices[1]),
+                       makeVertex(vertices, texcoords, normals, indices[2]),
+                   };
+                   return std::make_unique<Triangle>(triangleVertices);
                  });
   return out;
 }
 }  // namespace
 
-Triangle::Triangle(const Scene& scene, const indices_t& indices)
-    : scene_(scene), indices_(indices) {}
-
-const Vec3& Triangle::vertex(const size_t idx) const {
-  return scene_.vertices_[indices_[idx][VERTEX]];
-}
-
-const Vec3& Triangle::texcoord(const size_t idx) const {
-  return scene_.texcoords_[indices_[idx][TEXCOORD]];
-}
-
-const Vec3& Triangle::normal(const size_t idx) const {
-  return scene_.normals_[indices_[idx][NORMAL]];
-}
-
 Scene::Scene(std::vector<Vec3> vertices, std::vector<Vec3> texcoords,
              std::vector<Vec3> normals,
-             const std::vector<Triangle::indices_t>& triangles)
+             const std::vector<triangle_indices_t>& triangles)
     : vertices_(std::move(vertices)),
       texcoords_(std::move(texcoords)),
       normals_(std::move(normals)),
-      triangles_(makeTriangles(*this, triangles)) {}
+      triangles_(makeTriangles(vertices_, texcoords_, normals_, triangles)) {}
 }  // namespace tinyrt

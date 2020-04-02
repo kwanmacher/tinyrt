@@ -22,30 +22,31 @@
 
 #pragma once
 
-#include <memory>
-#include <vector>
+#include <array>
 
-#include "core/triangle.h"
 #include "core/vec3.h"
 
 namespace tinyrt {
-using triangle_indices_t = std::array<std::array<int32_t, 3>, 3>;
+struct Vertex final {
+  const Vec3& coord;
+  const Vec3* texcoord;
+  const Vec3& normal;
 
-enum Index { VERTEX, TEXCOORD, NORMAL };
+  Vertex(const Vec3& coord, const Vec3* texcoord, const Vec3& normal)
+      : coord(coord), texcoord(texcoord), normal(normal) {}
+};
 
-class Scene final {
+class Triangle final {
  public:
-  Scene(std::vector<Vec3> vertices, std::vector<Vec3> texcoords,
-        std::vector<Vec3> normals,
-        const std::vector<triangle_indices_t>& triangles);
-  Scene(const Scene&) = delete;
-  Scene& operator=(const Scene&) = delete;
+  explicit Triangle(const std::array<Vertex, 3>& vertices);
+  Triangle(const Triangle&) = delete;
+  Triangle& operator=(const Triangle&) = delete;
+
+  inline const Vertex& a() const;
+  inline const Vertex& b() const;
+  inline const Vertex& c() const;
 
  private:
- private:
-  const std::vector<Vec3> vertices_;
-  const std::vector<Vec3> texcoords_;
-  const std::vector<Vec3> normals_;
-  const std::vector<std::unique_ptr<Triangle>> triangles_;
+  const std::array<Vertex, 3> vertices_;
 };
 }  // namespace tinyrt
