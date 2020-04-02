@@ -22,31 +22,26 @@
 
 #pragma once
 
-#include <memory>
-#include <vector>
+#include <optional>
 
-#include "core/triangle.h"
-#include "core/vec3.h"
+#include "core/scene.h"
 
 namespace tinyrt {
-using triangle_indices_t = std::array<std::array<int32_t, 3>, 3>;
+struct Ray {
+  Vec3 origin;
+  Vec3 direction;
+};
 
-enum Index { VERTEX, TEXCOORD, NORMAL };
+struct Intersection {
+  Ray ray;
+  float time;
+  Vec3 normal;
+};
 
-class Scene final {
+class Tracer {
  public:
-  Scene(std::vector<Vec3> vertices, std::vector<Vec3> texcoords,
-        std::vector<Vec3> normals,
-        const std::vector<triangle_indices_t>& triangles);
-  Scene(const Scene&) = delete;
-  Scene& operator=(const Scene&) = delete;
-
-  const std::vector<std::unique_ptr<Triangle>>& triangles() const;
-
- private:
-  const std::vector<Vec3> vertices_;
-  const std::vector<Vec3> texcoords_;
-  const std::vector<Vec3> normals_;
-  const std::vector<std::unique_ptr<Triangle>> triangles_;
+  virtual ~Tracer() = default;
+  virtual void initialize(const Scene& scene) = 0;
+  virtual std::optional<Intersection> trace(const Ray& ray) = 0;
 };
 }  // namespace tinyrt
