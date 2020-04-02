@@ -104,10 +104,7 @@ class Vec3 {
            std::abs(v_.z) < kEpsilon;
   }
 
-  friend std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
-    os << "Vec3{x=" << vec->x << ",y=" << vec->y << ",z=" << vec->z << "}";
-    return os;
-  }
+  friend std::ostream& operator<<(std::ostream& os, const Vec3& vec);
 
  private:
   union {

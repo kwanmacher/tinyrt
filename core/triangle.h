@@ -36,16 +36,7 @@ struct Vertex final {
   Vertex(const Vec3& coord, const Vec3* texcoord, const Vec3& normal)
       : coord(coord), texcoord(texcoord), normal(normal) {}
 
-  friend std::ostream& operator<<(std::ostream& os, const Vertex& vertex) {
-    os << "Vertex{coord=" << vertex.coord << ", texcoord=";
-    if (vertex.texcoord) {
-      os << *vertex.texcoord;
-    } else {
-      os << "none";
-    }
-    os << ", normal=" << vertex.normal << "}";
-    return os;
-  }
+  friend std::ostream& operator<<(std::ostream& os, const Vertex& vertex);
 };
 
 class Triangle final {

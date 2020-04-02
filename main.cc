@@ -27,6 +27,7 @@
 #include "core/camera.h"
 #include "core/obj.h"
 #include "core/phong_shader.h"
+#include "core/stream.h"
 #include "util/flag.h"
 
 using namespace tinyrt;
@@ -42,6 +43,8 @@ int main(const int argc, const char** argv) {
   std::cout << "OBJ file loaded: " << cornellBox << std::endl;
 
   auto scene = std::move(cornellBox).moveToScene();
+  std::cout << "Scene created: " << *scene << std::endl;
+
   Camera camera(Vec3(0.f, 0.f, -1.9f), Vec3(0.f, 0.f, 1.f), Vec3(0.f, 1.f, 0.f),
                 45.f);
   Light light{

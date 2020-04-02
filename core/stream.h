@@ -22,33 +22,48 @@
 
 #pragma once
 
-#include <memory>
-#include <vector>
-
+#include "core/obj.h"
+#include "core/scene.h"
 #include "core/triangle.h"
 #include "core/vec3.h"
 
 namespace tinyrt {
-using triangle_indices_t = std::array<std::array<int32_t, 3>, 3>;
+std::ostream& operator<<(std::ostream& os, const Vertex& vertex) {
+  os << "Vertex{coord=" << vertex.coord << ", texcoord=";
+  if (vertex.texcoord) {
+    os << *vertex.texcoord;
+  } else {
+    os << "none";
+  }
+  os << ", normal=" << vertex.normal << "}";
+  return os;
+}
 
-enum Index { VERTEX, TEXCOORD, NORMAL };
+std::ostream& operator<<(std::ostream& os, const Triangle& triangle) {
+  os << "Triangle{a=" << triangle.a() << ", b=" << triangle.b()
+     << ", c=" << triangle.c() << "}";
+  return os;
+}
 
-class Scene final {
- public:
-  Scene(std::vector<Vec3> vertices, std::vector<Vec3> texcoords,
-        std::vector<Vec3> normals,
-        const std::vector<triangle_indices_t>& triangles);
-  Scene(const Scene&) = delete;
-  Scene& operator=(const Scene&) = delete;
+std::ostream& operator<<(std::ostream& os, const Scene& scene) {
+  os << "Scene{" << std::endl;
+  for (auto i = 0; i < scene.triangles_.size(); ++i) {
+    os << "#" << i << ": " << *scene.triangles_.at(i) << std::endl;
+  }
+  os << "}";
+  return os;
+}
 
-  const std::vector<std::unique_ptr<Triangle>>& triangles() const;
+std::ostream& operator<<(std::ostream& os, const Obj& obj) {
+  os << "Obj{vertices=" << obj.vertices_.size()
+     << ", texcoords=" << obj.texcoords_.size()
+     << ", normals=" << obj.normals_.size() << ", faces=" << obj.faces_.size()
+     << "}";
+  return os;
+}
 
-  friend std::ostream& operator<<(std::ostream& os, const Scene& scene);
-
- private:
-  const std::vector<Vec3> vertices_;
-  const std::vector<Vec3> texcoords_;
-  const std::vector<Vec3> normals_;
-  const std::vector<std::unique_ptr<Triangle>> triangles_;
-};
+std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
+  os << "Vec3{x=" << vec->x << ",y=" << vec->y << ",z=" << vec->z << "}";
+  return os;
+}
 }  // namespace tinyrt

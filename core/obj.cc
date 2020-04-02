@@ -131,12 +131,4 @@ std::unique_ptr<Scene> Obj::moveToScene() && {
   return createScene(std::move(vertices_), std::move(texcoords_),
                      std::move(normals_), std::move(faces_));
 }
-
-std::ostream& operator<<(std::ostream& os, const Obj& obj) {
-  os << "Obj{vertices=" << obj.vertices_.size()
-     << ", texcoords=" << obj.texcoords_.size()
-     << ", normals=" << obj.normals_.size() << ", faces=" << obj.faces_.size()
-     << "}";
-  return os;
-}
 }  // namespace tinyrt

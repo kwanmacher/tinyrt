@@ -25,10 +25,4 @@
 namespace tinyrt {
 Triangle::Triangle(const std::array<Vertex, 3>& vertices)
     : vertices_(vertices) {}
-
-std::ostream& operator<<(std::ostream& os, const Triangle& triangle) {
-  os << "Triangle{a=" << triangle.a() << ", b=" << triangle.b()
-     << ", c=" << triangle.c() << "}";
-  return os;
-}
 }  // namespace tinyrt
