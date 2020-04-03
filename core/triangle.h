@@ -25,6 +25,7 @@
 #include <array>
 #include <iostream>
 
+#include "core/material.h"
 #include "core/vec3.h"
 
 namespace tinyrt {
@@ -41,17 +42,19 @@ struct Vertex final {
 
 class Triangle final {
  public:
-  explicit Triangle(const std::array<Vertex, 3>& vertices);
+  Triangle(const std::array<Vertex, 3>& vertices, const Material& material);
   Triangle(const Triangle&) = delete;
   Triangle& operator=(const Triangle&) = delete;
 
   inline const Vertex& a() const { return vertices_[0]; }
   inline const Vertex& b() const { return vertices_[1]; }
   inline const Vertex& c() const { return vertices_[2]; }
+  inline const Material& material() const { return material_; }
 
   friend std::ostream& operator<<(std::ostream& os, const Triangle& triangle);
 
  private:
   const std::array<Vertex, 3> vertices_;
+  const Material& material_;
 };
 }  // namespace tinyrt

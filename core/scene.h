@@ -29,14 +29,15 @@
 #include "core/vec3.h"
 
 namespace tinyrt {
-using triangle_indices_t = std::array<std::array<int32_t, 3>, 3>;
+using triangle_indices_t =
+    std::pair<std::array<std::array<int32_t, 3>, 3>, uint32_t>;
 
 enum Index { VERTEX, TEXCOORD, NORMAL };
 
 class Scene final {
  public:
   Scene(std::vector<Vec3> vertices, std::vector<Vec3> texcoords,
-        std::vector<Vec3> normals,
+        std::vector<Vec3> normals, std::vector<Material> materials,
         const std::vector<triangle_indices_t>& triangles);
   Scene(const Scene&) = delete;
   Scene& operator=(const Scene&) = delete;
@@ -49,6 +50,7 @@ class Scene final {
   const std::vector<Vec3> vertices_;
   const std::vector<Vec3> texcoords_;
   const std::vector<Vec3> normals_;
+  const std::vector<Material> materials_;
   const std::vector<std::unique_ptr<Triangle>> triangles_;
 };
 }  // namespace tinyrt

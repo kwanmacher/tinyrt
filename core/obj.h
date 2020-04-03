@@ -42,12 +42,14 @@ class Obj final {
   friend std::ostream& operator<<(std::ostream& os, const Obj& obj);
 
  public:
-  using face_indices_t = std::vector<std::array<int32_t, 3>>;
+  using face_indices_t =
+      std::pair<std::vector<std::array<int32_t, 3>>, uint32_t>;
 
  private:
   std::vector<Vec3> vertices_;
   std::vector<Vec3> texcoords_;
   std::vector<Vec3> normals_;
+  std::vector<Material> materials_;
   std::vector<face_indices_t> faces_;
 };
 }  // namespace tinyrt

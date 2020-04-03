@@ -45,11 +45,11 @@ int main(const int argc, const char** argv) {
   auto scene = std::move(cornellBox).moveToScene();
   std::cout << "Scene created: " << *scene << std::endl;
 
-  Camera camera(Vec3(0.f, 0.f, -1.9f), Vec3(0.f, 0.f, 1.f), Vec3(0.f, 1.f, 0.f),
-                45.f);
+  Camera camera(Vec3(0.f, 1.f, 3.93f), Vec3(0.f, 0.f, -1.f),
+                Vec3(0.f, 1.f, 0.f), 39.f);
   Light light{
-      .position = Vec3(0.f, 1.f, 0.f),
-      .diffuse = Vec3(.6f, .6f, .6f),
+      .position = Vec3(0.f, 2.f, 0.f),
+      .diffuse = Vec3(.8f, .8f, .8f),
       .specular = Vec3(),
   };
   BasicTracer tracer;
@@ -66,7 +66,6 @@ int main(const int argc, const char** argv) {
       const auto ray = rayGenerator(i, j);
       const auto intersection = tracer.trace(ray);
       if (intersection) {
-        std::cout << "inter";
         result[i][j] = shader.shade(*intersection, light);
       }
     }

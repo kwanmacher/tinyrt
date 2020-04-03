@@ -39,29 +39,33 @@ static Vertex makeVertex(const std::vector<Vec3>& vertices,
 
 static std::vector<std::unique_ptr<Triangle>> makeTriangles(
     const std::vector<Vec3>& vertices, const std::vector<Vec3>& texcoords,
-    const std::vector<Vec3>& normals,
+    const std::vector<Vec3>& normals, const std::vector<Material>& materials,
     const std::vector<triangle_indices_t>& triangles) {
   std::vector<std::unique_ptr<Triangle>> out;
-  std::transform(triangles.begin(), triangles.end(), std::back_inserter(out),
-                 [&](const triangle_indices_t& indices) {
-                   std::array<Vertex, 3> triangleVertices{
-                       makeVertex(vertices, texcoords, normals, indices[0]),
-                       makeVertex(vertices, texcoords, normals, indices[1]),
-                       makeVertex(vertices, texcoords, normals, indices[2]),
-                   };
-                   return std::make_unique<Triangle>(triangleVertices);
-                 });
+  std::transform(
+      triangles.begin(), triangles.end(), std::back_inserter(out),
+      [&](const triangle_indices_t& indices) {
+        std::array<Vertex, 3> triangleVertices{
+            makeVertex(vertices, texcoords, normals, indices.first[0]),
+            makeVertex(vertices, texcoords, normals, indices.first[1]),
+            makeVertex(vertices, texcoords, normals, indices.first[2]),
+        };
+        return std::make_unique<Triangle>(triangleVertices,
+                                          materials[indices.second]);
+      });
   return out;
 }
 }  // namespace
 
 Scene::Scene(std::vector<Vec3> vertices, std::vector<Vec3> texcoords,
-             std::vector<Vec3> normals,
+             std::vector<Vec3> normals, std::vector<Material> materials,
              const std::vector<triangle_indices_t>& triangles)
     : vertices_(std::move(vertices)),
       texcoords_(std::move(texcoords)),
       normals_(std::move(normals)),
-      triangles_(makeTriangles(vertices_, texcoords_, normals_, triangles)) {}
+      materials_(std::move(materials)),
+      triangles_(makeTriangles(vertices_, texcoords_, normals_, materials_,
+                               triangles)) {}
 
 const std::vector<std::unique_ptr<Triangle>>& Scene::triangles() const {
   return triangles_;

@@ -46,6 +46,10 @@ class Vec3 {
     return Vec3(v_.x - other->x, v_.y - other->y, v_.z - other->z);
   }
 
+  inline Vec3 operator*(const Vec3& other) const {
+    return Vec3(v_.x * other->x, v_.y * other->y, v_.z * other->z);
+  }
+
   inline Vec3 operator*(const float scalar) const {
     return Vec3(v_.x * scalar, v_.y * scalar, v_.z * scalar);
   }

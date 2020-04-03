@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <iomanip>
+
 #include "core/obj.h"
 #include "core/scene.h"
 #include "core/triangle.h"
@@ -40,8 +42,8 @@ std::ostream& operator<<(std::ostream& os, const Vertex& vertex) {
 }
 
 std::ostream& operator<<(std::ostream& os, const Triangle& triangle) {
-  os << "Triangle{a=" << triangle.a() << ", b=" << triangle.b()
-     << ", c=" << triangle.c() << "}";
+  os << "Triangle{a=" << triangle.a() << ", \tb=" << triangle.b()
+     << ", \tc=" << triangle.c() << "}";
   return os;
 }
 
@@ -63,7 +65,8 @@ std::ostream& operator<<(std::ostream& os, const Obj& obj) {
 }
 
 std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
-  os << "Vec3{x=" << vec->x << ",y=" << vec->y << ",z=" << vec->z << "}";
+  os << "Vec3{x=" << std::fixed << std::setprecision(4) << vec->x
+     << ",y=" << vec->y << ",z=" << vec->z << "}";
   return os;
 }
 }  // namespace tinyrt

@@ -22,28 +22,29 @@
 
 #pragma once
 
-#include "core/shader.h"
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "core/vec3.h"
 
 namespace tinyrt {
-class PhongShader : public Shader {
- public:
-  Color shade(const Intersection& intersection, const Light& light) override {
-    const auto l = (light.position - intersection.position).normalize();
-    const auto r = -l.reflect(intersection.normal);
-    const auto v = -intersection.ray.direction;
-    const auto* material = intersection.material;
-    Color lumination;
-    if (material->illuminationModel & Material::DIFFUSE) {
-      lumination = lumination + light.diffuse * material->diffuse *
-                                    l.dot(intersection.normal);
-    }
-    if (material->illuminationModel & Material::SPECULAR &&
-        !light.specular.isSmall()) {
-      lumination =
-          lumination + light.specular * material->specular *
-                           std::pow(r.dot(v), material->specularExponent);
-    }
-    return lumination;
-  }
+struct Material {
+  enum IlluminationModel {
+    DIFFUSE = (1 << 0),
+    SPECULAR = (1 << 1),
+    REFLECTION = (1 << 2),
+    REFRACTION = (1 << 3),
+    ALL = (DIFFUSE | SPECULAR | REFLECTION | REFRACTION),
+  };
+
+  Vec3 ambient;
+  Vec3 diffuse;
+  Vec3 specular;
+  IlluminationModel illuminationModel{ALL};
+  float dissolve{1.f};
+  float sharpness{60.f};
+  float specularExponent{10.f};
+  float refractionIndex{1.f};
 };
 }  // namespace tinyrt

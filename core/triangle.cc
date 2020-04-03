@@ -23,6 +23,7 @@
 #include "core/triangle.h"
 
 namespace tinyrt {
-Triangle::Triangle(const std::array<Vertex, 3>& vertices)
-    : vertices_(vertices) {}
+Triangle::Triangle(const std::array<Vertex, 3>& vertices,
+                   const Material& material)
+    : vertices_(vertices), material_(material) {}
 }  // namespace tinyrt

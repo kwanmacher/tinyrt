@@ -40,12 +40,15 @@ struct Intersection {
   float time;
   Vec3 position;
   Vec3 normal;
+  const Material* material;
 
-  Intersection(const Ray& ray, const float time, const Vec3& normal)
+  Intersection(const Ray& ray, const float time, const Vec3& normal,
+               const Material& material)
       : ray(ray),
         time(time),
         position(ray.origin + ray.direction * time),
-        normal(normal) {}
+        normal(normal),
+        material(&material) {}
 };
 
 class Tracer {

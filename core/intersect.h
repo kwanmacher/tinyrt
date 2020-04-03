@@ -52,6 +52,6 @@ std::optional<Intersection> intersect(const Ray& ray,
     return std::nullopt;
   }
   // TODO(kaikai): Normal interpolation.
-  return Intersection(ray, t, triangle.a().normal);
+  return Intersection(ray, t, triangle.a().normal, triangle.material());
 }
 }  // namespace tinyrt
