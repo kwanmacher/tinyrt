@@ -20,34 +20,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#pragma once
-
-#include "core/shader.h"
+#include "core/ray_tracer.h"
 
 namespace tinyrt {
-class PhongShader : public Shader {
- public:
-  Color shade(const Intersection& intersection,
-              const Light& light) const override {
-    const auto* material = intersection.material;
-    if (material->light()) {
-      return material->ambient;
+Color RayTracer::trace(const Ray& ray, const Intersecter& intersecter,
+                       const Scene& scene, const Shader& shader) const {
+  Color illumination;
+  const auto intersection = intersecter.intersect(ray);
+  if (intersection) {
+    for (const auto& light : scene.lights()) {
+      Vec3 illum = shader.shade(*intersection, *light);
+      if (!illum.small()) {
+        const auto lightVec = light->aabb.center() - intersection->position;
+        const Ray shadowRay(
+            intersection->position + intersection->normal * 1e-4f, lightVec);
+        const auto shadowCheck = intersecter.intersect(shadowRay);
+        if (shadowCheck && shadowCheck->time < lightVec.norm() - 1e-3f) {
+          illum = Vec3();
+        }
+      }
+      illumination = illumination + illum;
     }
-    const auto l = (light.aabb.center() - intersection.position).normalize();
-    const auto r = -l.reflect(intersection.normal);
-    const auto v = -intersection.ray.direction;
-    Color lumination;
-    if (material->illuminationModel & Material::DIFFUSE) {
-      lumination = lumination + light.material.emittance * material->diffuse *
-                                    l.dot(intersection.normal);
-    }
-    if (material->illuminationModel & Material::SPECULAR &&
-        !light.material.specular.small()) {
-      lumination =
-          lumination + light.material.emittance * material->specular *
-                           std::pow(r.dot(v), material->specularExponent);
-    }
-    return lumination;
   }
-};
+  return illumination;
+}
 }  // namespace tinyrt

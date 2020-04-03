@@ -31,6 +31,7 @@ using Color = Vec3;
 class Shader {
  public:
   virtual ~Shader() = default;
-  virtual Color shade(const Intersection& intersection, const Light& light) = 0;
+  virtual Color shade(const Intersection& intersection,
+                      const Light& light) const = 0;
 };
 }  // namespace tinyrt

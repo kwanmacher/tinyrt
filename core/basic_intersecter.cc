@@ -29,13 +29,13 @@
 namespace tinyrt {
 void BasicIntersecter::initialize(const Scene& scene) { scene_ = &scene; }
 
-std::optional<Intersection> BasicIntersecter::trace(const Ray& ray) {
+std::optional<Intersection> BasicIntersecter::intersect(const Ray& ray) const {
   if (!scene_) {
     throw std::runtime_error("Must initialize with a scene first!");
   }
   std::optional<Intersection> intersection;
   for (const auto& triangle : scene_->triangles()) {
-    auto candidate = intersect(ray, *triangle);
+    auto candidate = ::tinyrt::intersect(ray, *triangle);
     if (candidate && (!intersection || intersection->time > candidate->time)) {
       intersection = candidate;
     }

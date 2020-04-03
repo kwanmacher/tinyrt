@@ -22,32 +22,12 @@
 
 #pragma once
 
-#include "core/shader.h"
+#include "core/tracer.h"
 
 namespace tinyrt {
-class PhongShader : public Shader {
+class RayTracer final : public Tracer {
  public:
-  Color shade(const Intersection& intersection,
-              const Light& light) const override {
-    const auto* material = intersection.material;
-    if (material->light()) {
-      return material->ambient;
-    }
-    const auto l = (light.aabb.center() - intersection.position).normalize();
-    const auto r = -l.reflect(intersection.normal);
-    const auto v = -intersection.ray.direction;
-    Color lumination;
-    if (material->illuminationModel & Material::DIFFUSE) {
-      lumination = lumination + light.material.emittance * material->diffuse *
-                                    l.dot(intersection.normal);
-    }
-    if (material->illuminationModel & Material::SPECULAR &&
-        !light.material.specular.small()) {
-      lumination =
-          lumination + light.material.emittance * material->specular *
-                           std::pow(r.dot(v), material->specularExponent);
-    }
-    return lumination;
-  }
+  Color trace(const Ray& ray, const Intersecter& intersecter,
+              const Scene& scene, const Shader& shader) const override;
 };
 }  // namespace tinyrt

@@ -27,6 +27,7 @@
 #include "core/camera.h"
 #include "core/obj.h"
 #include "core/phong_shader.h"
+#include "core/ray_tracer.h"
 #include "core/stream.h"
 #include "util/flag.h"
 
@@ -49,6 +50,7 @@ int main(const int argc, const char** argv) {
                 Vec3(0.f, 1.f, 0.f), 39.f);
   BasicIntersecter intersecter;
   PhongShader shader;
+  RayTracer rayTracer;
   intersecter.initialize(*scene);
 
   const unsigned width = 320;
@@ -59,12 +61,7 @@ int main(const int argc, const char** argv) {
   for (auto i = 0; i < width; ++i) {
     for (auto j = 0; j < height; ++j) {
       const auto ray = rayGenerator(i, j);
-      const auto intersection = intersecter.trace(ray);
-      if (intersection) {
-        for (const auto& light : scene->lights()) {
-          result[i][j] = shader.shade(*intersection, *light);
-        }
-      }
+      result[i][j] = rayTracer.trace(ray, intersecter, *scene, shader);
     }
     std::cout << "Finished " << i << "/" << width << std::endl;
   }

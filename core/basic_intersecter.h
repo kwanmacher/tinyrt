@@ -28,7 +28,7 @@ namespace tinyrt {
 class BasicIntersecter final : public Intersecter {
  public:
   void initialize(const Scene& scene) override;
-  std::optional<Intersection> trace(const Ray& ray) override;
+  std::optional<Intersection> intersect(const Ray& ray) const override;
 
  private:
   const Scene* scene_;

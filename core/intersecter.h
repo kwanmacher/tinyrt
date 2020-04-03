@@ -55,6 +55,6 @@ class Intersecter {
  public:
   virtual ~Intersecter() = default;
   virtual void initialize(const Scene& scene) = 0;
-  virtual std::optional<Intersection> trace(const Ray& ray) = 0;
+  virtual std::optional<Intersection> intersect(const Ray& ray) const = 0;
 };
 }  // namespace tinyrt
