@@ -22,10 +22,10 @@
 
 #pragma once
 
-#include "core/tracer.h"
+#include "core/intersecter.h"
 
 namespace tinyrt {
-class BasicTracer final : public Tracer {
+class BasicIntersecter final : public Intersecter {
  public:
   void initialize(const Scene& scene) override;
   std::optional<Intersection> trace(const Ray& ray) override;

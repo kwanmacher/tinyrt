@@ -23,7 +23,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "core/basic_tracer.h"
+#include "core/basic_intersecter.h"
 #include "core/camera.h"
 #include "core/obj.h"
 #include "core/phong_shader.h"
@@ -47,9 +47,9 @@ int main(const int argc, const char** argv) {
 
   Camera camera(Vec3(0.f, 1.f, 3.93f), Vec3(0.f, 0.f, -1.f),
                 Vec3(0.f, 1.f, 0.f), 39.f);
-  BasicTracer tracer;
+  BasicIntersecter intersecter;
   PhongShader shader;
-  tracer.initialize(*scene);
+  intersecter.initialize(*scene);
 
   const unsigned width = 320;
   const unsigned height = 320;
@@ -59,7 +59,7 @@ int main(const int argc, const char** argv) {
   for (auto i = 0; i < width; ++i) {
     for (auto j = 0; j < height; ++j) {
       const auto ray = rayGenerator(i, j);
-      const auto intersection = tracer.trace(ray);
+      const auto intersection = intersecter.trace(ray);
       if (intersection) {
         for (const auto& light : scene->lights()) {
           result[i][j] = shader.shade(*intersection, *light);

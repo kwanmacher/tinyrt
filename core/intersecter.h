@@ -51,9 +51,9 @@ struct Intersection {
         material(&material) {}
 };
 
-class Tracer {
+class Intersecter {
  public:
-  virtual ~Tracer() = default;
+  virtual ~Intersecter() = default;
   virtual void initialize(const Scene& scene) = 0;
   virtual std::optional<Intersection> trace(const Ray& ray) = 0;
 };

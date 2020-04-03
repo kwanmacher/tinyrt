@@ -22,8 +22,8 @@
 
 #pragma once
 
+#include "core/intersecter.h"
 #include "core/light.h"
-#include "core/tracer.h"
 
 namespace tinyrt {
 using Color = Vec3;

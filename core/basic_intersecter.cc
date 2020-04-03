@@ -20,16 +20,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "core/basic_tracer.h"
+#include "core/basic_intersecter.h"
 
 #include <exception>
 
 #include "core/intersect.h"
 
 namespace tinyrt {
-void BasicTracer::initialize(const Scene& scene) { scene_ = &scene; }
+void BasicIntersecter::initialize(const Scene& scene) { scene_ = &scene; }
 
-std::optional<Intersection> BasicTracer::trace(const Ray& ray) {
+std::optional<Intersection> BasicIntersecter::trace(const Ray& ray) {
   if (!scene_) {
     throw std::runtime_error("Must initialize with a scene first!");
   }

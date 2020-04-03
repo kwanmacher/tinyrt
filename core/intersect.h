@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "core/tracer.h"
+#include "core/intersecter.h"
 #include "core/triangle.h"
 
 namespace tinyrt {

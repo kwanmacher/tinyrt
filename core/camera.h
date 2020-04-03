@@ -24,7 +24,7 @@
 
 #include <functional>
 
-#include "core/tracer.h"
+#include "core/intersecter.h"
 
 namespace tinyrt {
 class Camera final {
