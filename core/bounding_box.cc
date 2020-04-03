@@ -20,20 +20,50 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#pragma once
-
 #include "core/bounding_box.h"
-#include "core/material.h"
-#include "core/vec3.h"
+
+#include <chrono>
+#include <limits>
+#include <random>
 
 namespace tinyrt {
-struct Light {
-  const BoundingBox aabb;
-  const Material& material;
+namespace {
+static constexpr auto kMinFloat = std::numeric_limits<float>::min();
+static constexpr auto kMaxFloat = std::numeric_limits<float>::max();
+}  // namespace
 
-  Light(const BoundingBox& aabb, const Material& material)
-      : aabb(aabb), material(material) {}
+BoundingBox::BoundingBox()
+    : BoundingBox(Vec3(kMaxFloat, kMaxFloat, kMaxFloat),
+                  Vec3(kMinFloat, kMinFloat, kMinFloat)) {}
 
-  friend std::ostream& operator<<(std::ostream& os, const Light& light);
-};
+BoundingBox::BoundingBox(const Vec3& min, const Vec3& max)
+    : min_(min), max_(max), size_(max - min), center_((min_ + max_) / 2.f) {}
+
+bool BoundingBox::contains(const Vec3& point) const {
+  return point > min_ && point < max_;
+}
+
+const Vec3& BoundingBox::center() const { return center_; }
+
+Vec3 BoundingBox::random() const {
+  if (min_.same(max_)) {
+    return min_;
+  }
+  static unsigned seed =
+      std::chrono::system_clock::now().time_since_epoch().count();
+  static std::default_random_engine engine(seed);
+  static std::uniform_real_distribution gen(0.f, 1.f);
+  Vec3 pos = size_;
+  for (auto i = 0; i < 3; ++i) {
+    pos[i] *= gen(engine);
+  }
+  return min_ + pos;
+}
+
+void BoundingBox::add(const Vec3& vec) {
+  min_ = min_.min(vec);
+  max_ = max_.max(vec);
+  size_ = max_ - min_;
+  center_ = (min_ + max_) / 2.f;
+}
 }  // namespace tinyrt

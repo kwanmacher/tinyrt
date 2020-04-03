@@ -72,6 +72,13 @@ static auto loadMtl(const std::string& path, std::vector<Material>& materials) {
           case 's':
             material->specular = value;
             break;
+          case 'e':
+            if (!value.zero()) {
+              float scale = std::max({value->x, value->y, value->z});
+              value /= scale;
+              material->emittance = value;
+            }
+            break;
           default:
             break;
         }
@@ -143,10 +150,12 @@ static auto loadObj(const std::string& path) {
   std::vector<Obj::face_indices_t> faces;
   std::vector<Material> materials;
   std::unordered_map<std::string, uint32_t> matIndexMap;
+  std::vector<light_t> lights;
 
   // Fallback material.
   materials.emplace_back();
   uint32_t material = 0;
+  bool light = false;
 
   std::ifstream file(path);
   const std::filesystem::path fsPath(path);
@@ -197,6 +206,9 @@ static auto loadObj(const std::string& path) {
                 throw std::out_of_range("Face index out-of-range!");
               }
               vertex[idx] = value;
+              if (idx == VERTEX && light) {
+                lights.back().first.add(vectors[idx][value]);
+              }
             }
             ++idx;
           }
@@ -212,19 +224,23 @@ static auto loadObj(const std::string& path) {
         lineStream >> mtl;
         material =
             matIndexMap.find(mtl) != matIndexMap.end() ? matIndexMap[mtl] : 0;
+        light = materials[material].light();
+        if (light) {
+          lights.emplace_back(BoundingBox(), material);
+        }
       } break;
       default:
         break;
     }
   }
   return std::make_tuple(vectors[VERTEX], vectors[TEXCOORD], vectors[NORMAL],
-                         materials, faces);
+                         materials, faces, lights);
 }
 
 static std::unique_ptr<Scene> createScene(
     std::vector<Vec3> vertices, std::vector<Vec3> texcoords,
     std::vector<Vec3> normals, std::vector<Material> materials,
-    std::vector<Obj::face_indices_t> faces) {
+    std::vector<Obj::face_indices_t> faces, std::vector<light_t> lights) {
   std::vector<triangle_indices_t> triangles;
   for (auto& face : faces) {
     if (face.first.size() < 3) {
@@ -247,21 +263,23 @@ static std::unique_ptr<Scene> createScene(
   }
   return std::make_unique<Scene>(std::move(vertices), std::move(texcoords),
                                  std::move(normals), std::move(materials),
-                                 std::move(triangles));
+                                 std::move(triangles), std::move(lights));
 }
 }  // namespace
 
 Obj::Obj(const std::string& path) {
-  std::tie(vertices_, texcoords_, normals_, materials_, faces_) = loadObj(path);
+  std::tie(vertices_, texcoords_, normals_, materials_, faces_, lights_) =
+      loadObj(path);
 }
 
 std::unique_ptr<Scene> Obj::toScene() const& {
-  return createScene(vertices_, texcoords_, normals_, materials_, faces_);
+  return createScene(vertices_, texcoords_, normals_, materials_, faces_,
+                     lights_);
 }
 
 std::unique_ptr<Scene> Obj::moveToScene() && {
   return createScene(std::move(vertices_), std::move(texcoords_),
                      std::move(normals_), std::move(materials_),
-                     std::move(faces_));
+                     std::move(faces_), std::move(lights_));
 }
 }  // namespace tinyrt

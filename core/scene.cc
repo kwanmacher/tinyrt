@@ -55,19 +55,37 @@ static std::vector<std::unique_ptr<Triangle>> makeTriangles(
       });
   return out;
 }
+
+static std::vector<std::unique_ptr<Light>> makeLights(
+    const std::vector<Material>& materials,
+    const std::vector<light_t>& lights) {
+  std::vector<std::unique_ptr<Light>> out;
+  std::transform(lights.begin(), lights.end(), std::back_inserter(out),
+                 [&](const light_t& light) {
+                   return std::make_unique<Light>(light.first,
+                                                  materials[light.second]);
+                 });
+  return out;
+}
 }  // namespace
 
 Scene::Scene(std::vector<Vec3> vertices, std::vector<Vec3> texcoords,
              std::vector<Vec3> normals, std::vector<Material> materials,
-             const std::vector<triangle_indices_t>& triangles)
+             const std::vector<triangle_indices_t>& triangles,
+             const std::vector<light_t>& lights)
     : vertices_(std::move(vertices)),
       texcoords_(std::move(texcoords)),
       normals_(std::move(normals)),
       materials_(std::move(materials)),
       triangles_(makeTriangles(vertices_, texcoords_, normals_, materials_,
-                               triangles)) {}
+                               triangles)),
+      lights_(makeLights(materials_, lights)) {}
 
 const std::vector<std::unique_ptr<Triangle>>& Scene::triangles() const {
   return triangles_;
+}
+
+const std::vector<std::unique_ptr<Light>>& Scene::lights() const {
+  return lights_;
 }
 }  // namespace tinyrt

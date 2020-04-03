@@ -47,11 +47,6 @@ int main(const int argc, const char** argv) {
 
   Camera camera(Vec3(0.f, 1.f, 3.93f), Vec3(0.f, 0.f, -1.f),
                 Vec3(0.f, 1.f, 0.f), 39.f);
-  Light light{
-      .position = Vec3(0.f, 2.f, 0.f),
-      .diffuse = Vec3(.8f, .8f, .8f),
-      .specular = Vec3(),
-  };
   BasicTracer tracer;
   PhongShader shader;
   tracer.initialize(*scene);
@@ -66,10 +61,12 @@ int main(const int argc, const char** argv) {
       const auto ray = rayGenerator(i, j);
       const auto intersection = tracer.trace(ray);
       if (intersection) {
-        result[i][j] = shader.shade(*intersection, light);
+        for (const auto& light : scene->lights()) {
+          result[i][j] = shader.shade(*intersection, *light);
+        }
       }
     }
-    // std::cout << "Finished " << i << "/" << width << std::endl;
+    std::cout << "Finished " << i << "/" << width << std::endl;
   }
 
   std::ofstream ppm(flags.get<kOutPath>());

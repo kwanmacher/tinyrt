@@ -41,10 +41,13 @@ struct Material {
   Vec3 ambient;
   Vec3 diffuse;
   Vec3 specular;
+  Vec3 emittance;
   IlluminationModel illuminationModel{ALL};
   float dissolve{1.f};
   float sharpness{60.f};
   float specularExponent{10.f};
   float refractionIndex{1.f};
+
+  inline bool light() const { return !emittance.zero(); }
 };
 }  // namespace tinyrt

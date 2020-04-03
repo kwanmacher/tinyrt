@@ -58,6 +58,18 @@ class Vec3 {
     return Vec3(v_.x / scalar, v_.y / scalar, v_.z / scalar);
   }
 
+  inline bool operator>(const Vec3& other) const {
+    return v_.x > other->x && v_.y > other->y && v_.z > other->z;
+  }
+
+  inline bool operator<(const Vec3& other) const {
+    return v_.x < other->x && v_.y < other->y && v_.z < other->z;
+  }
+
+  inline bool operator==(const Vec3 other) const {
+    return v_.x == other->x && v_.y == other->y && v_.z == other->z;
+  }
+
   inline float dot(const Vec3& other) const {
     return (v_.x * other->x + v_.y * other->y + v_.z * other->z);
   }
@@ -96,17 +108,30 @@ class Vec3 {
     return *this - normal * 2 * this->dot(normal);
   }
 
-  inline bool isZero() const {
+  inline bool zero() const {
     const float kEpsilon = 1e-6f;
     return std::abs(v_.x) < kEpsilon && std::abs(v_.y) < kEpsilon &&
            std::abs(v_.z) < kEpsilon;
   }
 
-  inline bool isSmall() const {
+  inline bool small() const {
     const float kEpsilon = 1e-3f;
     return std::abs(v_.x) < kEpsilon && std::abs(v_.y) < kEpsilon &&
            std::abs(v_.z) < kEpsilon;
   }
+
+  inline Vec3 max(const Vec3& other) {
+    return Vec3(std::max(v_.x, other->x), std::max(v_.y, other->y),
+                std::max(v_.z, other->z));
+  }
+
+  inline Vec3 min(const Vec3& other) {
+    return Vec3(std::min(v_.x, other->x), std::min(v_.y, other->y),
+                std::min(v_.z, other->z));
+  }
+
+  inline bool same(const Vec3& other) const { return (*this - other).zero(); }
+  inline bool close(const Vec3& other) const { return (*this - other).small(); }
 
   friend std::ostream& operator<<(std::ostream& os, const Vec3& vec);
 

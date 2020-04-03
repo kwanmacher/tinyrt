@@ -24,6 +24,7 @@
 
 #include <iomanip>
 
+#include "core/bounding_box.h"
 #include "core/obj.h"
 #include "core/scene.h"
 #include "core/triangle.h"
@@ -48,9 +49,13 @@ std::ostream& operator<<(std::ostream& os, const Triangle& triangle) {
 }
 
 std::ostream& operator<<(std::ostream& os, const Scene& scene) {
-  os << "Scene{" << std::endl;
+  os << "Scene{Triangles:" << std::endl;
   for (auto i = 0; i < scene.triangles_.size(); ++i) {
     os << "#" << i << ": " << *scene.triangles_.at(i) << std::endl;
+  }
+  os << "Lights:" << std::endl;
+  for (auto i = 0; i < scene.lights_.size(); ++i) {
+    os << "#" << i << ": " << *scene.lights_.at(i) << std::endl;
   }
   os << "}";
   return os;
@@ -67,6 +72,16 @@ std::ostream& operator<<(std::ostream& os, const Obj& obj) {
 std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
   os << "Vec3{x=" << std::fixed << std::setprecision(4) << vec->x
      << ",y=" << vec->y << ",z=" << vec->z << "}";
+  return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const BoundingBox& bb) {
+  os << "BoundingBox{min=" << bb.min_ << ", max=" << bb.max_ << "}";
+  return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const Light& light) {
+  os << "Light{aabb=" << light.aabb << "}";
   return os;
 }
 }  // namespace tinyrt

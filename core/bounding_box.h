@@ -22,18 +22,25 @@
 
 #pragma once
 
-#include "core/bounding_box.h"
-#include "core/material.h"
-#include "core/vec3.h"
+#include "core/triangle.h"
 
 namespace tinyrt {
-struct Light {
-  const BoundingBox aabb;
-  const Material& material;
+class BoundingBox final {
+ public:
+  BoundingBox();
+  BoundingBox(const Vec3& min, const Vec3& max);
 
-  Light(const BoundingBox& aabb, const Material& material)
-      : aabb(aabb), material(material) {}
+  bool contains(const Vec3& point) const;
+  Vec3 random() const;
+  const Vec3& center() const;
+  void add(const Vec3& vec);
 
-  friend std::ostream& operator<<(std::ostream& os, const Light& light);
+  friend std::ostream& operator<<(std::ostream& os, const BoundingBox& bb);
+
+ private:
+  Vec3 min_;
+  Vec3 max_;
+  Vec3 size_;
+  Vec3 center_;
 };
 }  // namespace tinyrt

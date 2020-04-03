@@ -28,19 +28,22 @@ namespace tinyrt {
 class PhongShader : public Shader {
  public:
   Color shade(const Intersection& intersection, const Light& light) override {
-    const auto l = (light.position - intersection.position).normalize();
+    const auto* material = intersection.material;
+    if (material->light()) {
+      return material->ambient;
+    }
+    const auto l = (light.aabb.center() - intersection.position).normalize();
     const auto r = -l.reflect(intersection.normal);
     const auto v = -intersection.ray.direction;
-    const auto* material = intersection.material;
     Color lumination;
     if (material->illuminationModel & Material::DIFFUSE) {
-      lumination = lumination + light.diffuse * material->diffuse *
+      lumination = lumination + light.material.emittance * material->diffuse *
                                     l.dot(intersection.normal);
     }
     if (material->illuminationModel & Material::SPECULAR &&
-        !light.specular.isSmall()) {
+        !light.material.specular.small()) {
       lumination =
-          lumination + light.specular * material->specular *
+          lumination + light.material.emittance * material->specular *
                            std::pow(r.dot(v), material->specularExponent);
     }
     return lumination;

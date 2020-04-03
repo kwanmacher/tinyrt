@@ -51,5 +51,6 @@ class Obj final {
   std::vector<Vec3> normals_;
   std::vector<Material> materials_;
   std::vector<face_indices_t> faces_;
+  std::vector<light_t> lights_;
 };
 }  // namespace tinyrt
