@@ -22,8 +22,6 @@
 
 #include "core/ray_tracer.h"
 
-#include "core/constants.h"
-
 namespace tinyrt {
 Color RayTracer::trace(const RaySampler& raySampler,
                        const Intersecter& intersecter, const Scene& scene,
@@ -45,7 +43,7 @@ Color RayTracer::trace(const RaySampler& raySampler,
       }
       illumination = illumination + illum;
     }
-    illumination = illumination / kPI;
+    illumination = illumination / M_PI;
   }
   return illumination;
 }

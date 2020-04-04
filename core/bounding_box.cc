@@ -45,6 +45,8 @@ bool BoundingBox::contains(const Vec3& point) const {
 
 const Vec3& BoundingBox::center() const { return center_; }
 
+const Vec3& BoundingBox::size() const { return size_; }
+
 Vec3 BoundingBox::random() const {
   if (min_.same(max_)) {
     return min_;

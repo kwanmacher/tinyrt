@@ -22,7 +22,6 @@
 
 #pragma once
 
-#include "core/constants.h"
 #include "core/shader.h"
 
 namespace tinyrt {
@@ -32,22 +31,23 @@ class PhongShader : public Shader {
               const Light& light) const override {
     const auto* material = intersection.material;
     if (material->light()) {
-      return material->emittance * material->ambient;
+      return material->ambient * M_PI;
     }
     const auto l = (light.aabb.center() - intersection.position).normalize();
     Color lumination;
     if (material->illuminationModel & Material::DIFFUSE) {
-      lumination = lumination + light.material.emittance * material->diffuse *
-                                    std::max(l.dot(intersection.normal), 0.f);
+      lumination += light.material.emittance * material->diffuse *
+                    std::max(l.dot(intersection.normal), 0.f);
     }
     if (material->illuminationModel & Material::SPECULAR &&
         !light.material.specular.small()) {
       const auto r = -l.reflect(intersection.normal);
       const auto v = -intersection.ray.direction;
-      lumination = lumination + light.material.emittance * material->specular *
-                                    std::pow(std::max(r.dot(v), 0.f),
-                                             material->specularExponent);
+      lumination +=
+          light.material.emittance * material->specular *
+          std::pow(std::max(r.dot(v), 0.f), material->specularExponent);
     }
+    lumination *= light.intensity(intersection.position);
     return lumination;
   }
 };

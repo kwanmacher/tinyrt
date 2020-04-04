@@ -57,29 +57,29 @@ int main(const int argc, const char** argv) {
   PathTracer rayTracer;
   intersecter.initialize(*scene);
 
-  const unsigned width = 320;
-  const unsigned height = 320;
+  const unsigned width = 640;
+  const unsigned height = 640;
   const auto totalPixels = width * height;
   Vec3 result[width][height];
   std::atomic_int completed;
   std::promise<void> promise;
 
   const TraceOptions options{
-      .directRays = 100,
-      .indirectRays = 100,
-      .shadowRays = 1,
+      .directRays = 120,
+      .indirectRays = 10,
+      .shadowRays = 3,
   };
   auto rayGenerator = camera.adapt(width, height);
   for (auto i = 0; i < width; ++i) {
     for (auto j = 0; j < height; ++j) {
-      Async::instance().submit([&, i, j] {
+      Async::submit([&, i, j] {
         static thread_local std::mt19937 generator;
         std::uniform_real_distribution gen(0.f, 1.f);
         const RaySampler raySampler([&] {
           return rayGenerator(i + gen(generator), j + gen(generator));
         });
-        result[i][j] = result[i][j] + rayTracer.trace(raySampler, intersecter,
-                                                      *scene, shader, options);
+        result[i][j] =
+            rayTracer.trace(raySampler, intersecter, *scene, shader, options);
         const auto completedPixels = ++completed;
         if (completedPixels % (totalPixels / 100) == 0) {
           std::cout << "Finished " << completed << "/" << totalPixels

@@ -25,22 +25,11 @@
 #include <functional>
 
 namespace tinyrt {
-class ThreadPool;
-
 class Async final {
  public:
-  Async(const Async&) = delete;
-  Async& operator=(const Async&) = delete;
-  ~Async();
-
-  static Async& instance();
-
-  void submit(const std::function<void()>& function);
+  static void submit(const std::function<void()>& function);
 
  private:
   Async();
-
- private:
-  std::unique_ptr<ThreadPool> threadPool_;
 };
 }  // namespace tinyrt

@@ -33,6 +33,7 @@ class BoundingBox final {
   bool contains(const Vec3& point) const;
   Vec3 random() const;
   const Vec3& center() const;
+  const Vec3& size() const;
   void add(const Vec3& vec);
 
   friend std::ostream& operator<<(std::ostream& os, const BoundingBox& bb);

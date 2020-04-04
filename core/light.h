@@ -34,6 +34,8 @@ struct Light {
   Light(const BoundingBox& aabb, const Material& material)
       : aabb(aabb), material(material) {}
 
+  float intensity(const Vec3& point) const;
+
   friend std::ostream& operator<<(std::ostream& os, const Light& light);
 };
 }  // namespace tinyrt

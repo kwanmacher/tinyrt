@@ -22,8 +22,6 @@
 
 #include "core/camera.h"
 
-#include "core/constants.h"
-
 namespace tinyrt {
 Camera::Camera(const Vec3& position, const Vec3& direction, const Vec3& up,
                const float fov)
@@ -36,7 +34,7 @@ std::function<Ray(float, float)> Camera::adapt(const unsigned width,
                                                const unsigned height) const {
   const auto aspectRatio = width * 1.f / height;
   const auto left = up_.cross(direction_);
-  const auto fov = direction_.norm() * std::tan(fov_ / 360 * kPI);
+  const auto fov = std::tan(fov_ / 360 * M_PI);
   const auto adaptedUp = up_ * fov;
   const auto adaptedLeft = left * (fov * aspectRatio);
   const auto topLeft = position_ + direction_ + adaptedUp + adaptedLeft;

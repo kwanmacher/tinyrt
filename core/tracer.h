@@ -30,6 +30,7 @@ struct TraceOptions {
   unsigned directRays;
   unsigned indirectRays;
   unsigned shadowRays;
+  Color background;
 };
 
 using RaySampler = std::function<Ray()>;

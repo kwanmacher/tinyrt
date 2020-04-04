@@ -75,11 +75,7 @@ static auto loadMtl(const std::string& path, std::vector<Material>& materials) {
             material->specular = value;
             break;
           case 'e':
-            if (!value.zero()) {
-              float scale = std::max({value->x, value->y, value->z});
-              value *= kPI / scale;
-              material->emittance = value;
-            }
+            material->emittance = value;
             break;
           default:
             break;

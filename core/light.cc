@@ -22,8 +22,21 @@
 
 #pragma once
 
-#include <cmath>
+#include "core/light.h"
 
 namespace tinyrt {
-const double kPI = std::acos(-1);
+float Light::intensity(const Vec3& point) const {
+  const auto& size = aabb.size();
+  const auto distance = point - aabb.center();
+  const auto direction = distance.normalize();
+  const auto areax = size->y * size->z;
+  const auto areay = size->x * size->z;
+  const auto areaz = size->x * size->y;
+  const auto area = areax + areay + areaz;
+  const auto unattenuatedIntensity =
+      (std::abs(direction->x) * areax + std::abs(direction->y) * areay +
+       std::abs(direction->z) * areaz) /
+      area;
+  return unattenuatedIntensity / (4 * M_PI * distance.norm());
+}
 }  // namespace tinyrt

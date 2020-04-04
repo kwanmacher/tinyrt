@@ -106,15 +106,8 @@ class Vec3 {
 
   inline float norm2() const { return v_.x * v_.x + v_.y * v_.y + v_.z * v_.z; }
   inline float norm() const { return std::sqrt(norm2()); }
-  inline Vec3& normalize() & {
-    *this /= norm();
-    return *this;
-  }
 
-  inline Vec3 normalize() const& {
-    Vec3 normalized = *this;
-    return normalized.normalize();
-  }
+  inline Vec3 normalize() const& { return *this / this->norm(); }
 
   inline Vec3 reflect(const Vec3& normal) const {
     return *this - normal * 2 * this->dot(normal);
@@ -142,17 +135,26 @@ class Vec3 {
                 std::min(v_.z, other->z));
   }
 
+  inline Vec3 max(const float other) {
+    return Vec3(std::max(v_.x, other), std::max(v_.y, other),
+                std::max(v_.z, other));
+  }
+
+  inline Vec3 min(const float other) {
+    return Vec3(std::min(v_.x, other), std::min(v_.y, other),
+                std::min(v_.z, other));
+  }
+
   inline std::tuple<Vec3, Vec3, Vec3> basis() const {
     static const Vec3 x(1.f, 0.f, 0.f);
     static const Vec3 y(0.f, 1.f, 0.f);
-    Vec3 z = *this;
-    z.normalize();
+    Vec3 z = this->normalize();
     auto i = z.cross(x);
     if (i.zero()) {
       i = z.cross(y);
     }
-    i.normalize();
-    return {i, i.cross(z), z};
+    i = i.normalize();
+    return {i, z, i.cross(z)};
   }
 
   inline bool same(const Vec3& other) const { return (*this - other).zero(); }

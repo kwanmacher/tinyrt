@@ -2,16 +2,34 @@
 
 #include "util/async.h"
 
+#include <future>
+#include <iostream>
 #include <mutex>
 #include <queue>
-#include <thread>
 
 namespace tinyrt {
+namespace {
 class ThreadPool final {
  public:
-  explicit ThreadPool(int num_threads) {
-    for (int i = 0; i < num_threads; ++i) {
-      threads_.push_back(std::thread(&ThreadPool::WorkLoop, this));
+  explicit ThreadPool(unsigned num_threads) {
+    std::cout << "Thread pool created with " << num_threads << " threads."
+              << std::endl;
+    for (auto i = 0U; i < num_threads; ++i) {
+      workers_.push_back(std::async(std::launch::async, [this] {
+        while (true) {
+          std::function<void()> func;
+          {
+            std::unique_lock<std::mutex> l(mu_);
+            cv_.wait(l, [this] { return !queue_.empty(); });
+            func = std::move(queue_.front());
+            queue_.pop();
+          }
+          if (func == nullptr) {  // Shutdown signal.
+            break;
+          }
+          func();
+        }
+      }));
     }
   }
 
@@ -21,12 +39,13 @@ class ThreadPool final {
   ~ThreadPool() {
     {
       std::lock_guard<std::mutex> l(mu_);
-      for (size_t i = 0; i < threads_.size(); i++) {
+      for (auto i = 0U; i < workers_.size(); i++) {
         queue_.push(nullptr);  // Shutdown signal.
       }
     }
-    for (auto& t : threads_) {
-      t.join();
+    cv_.notify_all();
+    for (auto& worker : workers_) {
+      worker.wait();
     }
   }
 
@@ -39,40 +58,15 @@ class ThreadPool final {
   }
 
  private:
-  void WorkLoop() {
-    while (true) {
-      std::function<void()> func;
-      {
-        std::unique_lock<std::mutex> l(mu_);
-        cv_.wait(l, [this] { return !queue_.empty(); });
-        func = std::move(queue_.front());
-        queue_.pop();
-      }
-      if (func == nullptr) {  // Shutdown signal.
-        break;
-      }
-      func();
-    }
-  }
-
   std::mutex mu_;
   std::condition_variable cv_;
   std::queue<std::function<void()>> queue_;
-  std::vector<std::thread> threads_;
+  std::vector<std::future<void>> workers_;
 };
-
-Async& Async::instance() {
-  static Async async;  // singleton.
-  return async;
-}
-
-Async::Async()
-    : threadPool_(
-          std::make_unique<ThreadPool>(std::thread::hardware_concurrency())) {}
-
-Async::~Async() = default;
+};  // namespace
 
 void Async::submit(const std::function<void()>& function) {
-  threadPool_->submit(function);
+  static ThreadPool threadPool(std::thread::hardware_concurrency());
+  threadPool.submit(function);
 }
 }  // namespace tinyrt

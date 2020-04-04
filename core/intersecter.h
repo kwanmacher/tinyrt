@@ -47,7 +47,7 @@ struct Intersection {
       : ray(ray),
         time(time),
         position(ray.origin + ray.direction * time),
-        normal(normal),
+        normal(normal.normalize()),
         material(&material) {}
 };
 

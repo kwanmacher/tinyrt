@@ -32,9 +32,8 @@ class PathTracer final : public Tracer {
               const TraceOptions& options) const override;
 
  private:
-  Color traceInternal(const RaySampler& raySampler,
-                      const Intersecter& intersecter, const Scene& scene,
-                      const Shader& shader, const TraceOptions& options,
-                      unsigned depth) const;
+  Color traceInternal(const Ray& ray, const Intersecter& intersecter,
+                      const Scene& scene, const Shader& shader,
+                      const TraceOptions& options, unsigned depth) const;
 };
 }  // namespace tinyrt
