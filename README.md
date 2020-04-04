@@ -9,4 +9,4 @@ Here's a couple of things I'm striving for for this project:
 5. No external dependencies other than available in stl.
 
 Here's some current rendered results using path tracing:
-![Cornell box original. Path tracing with tinyrt.](link-to-image)
+![Cornell box original. Path tracing with tinyrt.](asset/cornell_box_output.png)
