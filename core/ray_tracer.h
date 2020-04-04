@@ -27,7 +27,8 @@
 namespace tinyrt {
 class RayTracer final : public Tracer {
  public:
-  Color trace(const Ray& ray, const Intersecter& intersecter,
-              const Scene& scene, const Shader& shader) const override;
+  Color trace(const RaySampler& raySampler, const Intersecter& intersecter,
+              const Scene& scene, const Shader& shader,
+              const TraceOptions& options) const override;
 };
 }  // namespace tinyrt

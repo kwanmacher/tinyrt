@@ -86,6 +86,18 @@ class Vec3 {
     v_.z /= scalar;
   }
 
+  inline void operator+=(const Vec3& other) {
+    v_.x += other->x;
+    v_.y += other->y;
+    v_.z += other->z;
+  }
+
+  inline void operator-=(const Vec3& other) {
+    v_.x -= other->x;
+    v_.y -= other->y;
+    v_.z -= other->z;
+  }
+
   inline Vec3 cross(const Vec3& other) const {
     return Vec3(v_.y * other->z - v_.z * other->y,
                 v_.z * other->x - v_.x * other->z,
@@ -128,6 +140,19 @@ class Vec3 {
   inline Vec3 min(const Vec3& other) {
     return Vec3(std::min(v_.x, other->x), std::min(v_.y, other->y),
                 std::min(v_.z, other->z));
+  }
+
+  inline std::tuple<Vec3, Vec3, Vec3> basis() const {
+    static const Vec3 x(1.f, 0.f, 0.f);
+    static const Vec3 y(0.f, 1.f, 0.f);
+    Vec3 z = *this;
+    z.normalize();
+    auto i = z.cross(x);
+    if (i.zero()) {
+      i = z.cross(y);
+    }
+    i.normalize();
+    return {i, i.cross(z), z};
   }
 
   inline bool same(const Vec3& other) const { return (*this - other).zero(); }

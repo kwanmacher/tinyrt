@@ -28,6 +28,8 @@
 #include <tuple>
 #include <unordered_map>
 
+#include "core/constants.h"
+
 namespace tinyrt {
 namespace {
 static auto loadMtl(const std::string& path, std::vector<Material>& materials) {
@@ -75,7 +77,7 @@ static auto loadMtl(const std::string& path, std::vector<Material>& materials) {
           case 'e':
             if (!value.zero()) {
               float scale = std::max({value->x, value->y, value->z});
-              value /= scale;
+              value *= kPI / scale;
               material->emittance = value;
             }
             break;

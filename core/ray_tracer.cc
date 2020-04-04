@@ -22,11 +22,15 @@
 
 #include "core/ray_tracer.h"
 
+#include "core/constants.h"
+
 namespace tinyrt {
-Color RayTracer::trace(const Ray& ray, const Intersecter& intersecter,
-                       const Scene& scene, const Shader& shader) const {
+Color RayTracer::trace(const RaySampler& raySampler,
+                       const Intersecter& intersecter, const Scene& scene,
+                       const Shader& shader,
+                       const TraceOptions& options) const {
   Color illumination;
-  const auto intersection = intersecter.intersect(ray);
+  const auto intersection = intersecter.intersect(raySampler());
   if (intersection) {
     for (const auto& light : scene.lights()) {
       Vec3 illum = shader.shade(*intersection, *light);
@@ -41,6 +45,7 @@ Color RayTracer::trace(const Ray& ray, const Intersecter& intersecter,
       }
       illumination = illumination + illum;
     }
+    illumination = illumination / kPI;
   }
   return illumination;
 }

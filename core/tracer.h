@@ -26,10 +26,20 @@
 #include "core/shader.h"
 
 namespace tinyrt {
+struct TraceOptions {
+  unsigned directRays;
+  unsigned indirectRays;
+  unsigned shadowRays;
+};
+
+using RaySampler = std::function<Ray()>;
+
 class Tracer {
  public:
   virtual ~Tracer() = default;
-  virtual Color trace(const Ray& ray, const Intersecter& intersecter,
-                      const Scene& scene, const Shader& shader) const = 0;
+  virtual Color trace(const RaySampler& raySampler,
+                      const Intersecter& intersecter, const Scene& scene,
+                      const Shader& shader,
+                      const TraceOptions& options) const = 0;
 };
 }  // namespace tinyrt

@@ -31,8 +31,8 @@ class Camera final {
  public:
   Camera(const Vec3& position, const Vec3& direction, const Vec3& up,
          const float fov);
-  std::function<Ray(unsigned, unsigned)> adapt(const unsigned width,
-                                               const unsigned height) const;
+  std::function<Ray(float, float)> adapt(const unsigned width,
+                                         const unsigned height) const;
 
  private:
   const Vec3 position_;

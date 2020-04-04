@@ -21,14 +21,18 @@
 // SOFTWARE.
 
 #include <fstream>
+#include <future>
 #include <iostream>
+#include <random>
 
 #include "core/basic_intersecter.h"
 #include "core/camera.h"
 #include "core/obj.h"
+#include "core/path_tracer.h"
 #include "core/phong_shader.h"
 #include "core/ray_tracer.h"
 #include "core/stream.h"
+#include "util/async.h"
 #include "util/flag.h"
 
 using namespace tinyrt;
@@ -50,21 +54,45 @@ int main(const int argc, const char** argv) {
                 Vec3(0.f, 1.f, 0.f), 39.f);
   BasicIntersecter intersecter;
   PhongShader shader;
-  RayTracer rayTracer;
+  PathTracer rayTracer;
   intersecter.initialize(*scene);
 
   const unsigned width = 320;
   const unsigned height = 320;
+  const auto totalPixels = width * height;
   Vec3 result[width][height];
+  std::atomic_int completed;
+  std::promise<void> promise;
 
+  const TraceOptions options{
+      .directRays = 100,
+      .indirectRays = 100,
+      .shadowRays = 1,
+  };
   auto rayGenerator = camera.adapt(width, height);
   for (auto i = 0; i < width; ++i) {
     for (auto j = 0; j < height; ++j) {
-      const auto ray = rayGenerator(i, j);
-      result[i][j] = rayTracer.trace(ray, intersecter, *scene, shader);
+      Async::instance().submit([&, i, j] {
+        static thread_local std::mt19937 generator;
+        std::uniform_real_distribution gen(0.f, 1.f);
+        const RaySampler raySampler([&] {
+          return rayGenerator(i + gen(generator), j + gen(generator));
+        });
+        result[i][j] = result[i][j] + rayTracer.trace(raySampler, intersecter,
+                                                      *scene, shader, options);
+        const auto completedPixels = ++completed;
+        if (completedPixels % (totalPixels / 100) == 0) {
+          std::cout << "Finished " << completed << "/" << totalPixels
+                    << std::endl;
+        }
+        if (completedPixels == totalPixels) {
+          std::cout << "Completed!" << std::endl;
+          promise.set_value();
+        }
+      });
     }
-    std::cout << "Finished " << i << "/" << width << std::endl;
   }
+  promise.get_future().wait();
 
   std::ofstream ppm(flags.get<kOutPath>());
   ppm << "P3" << std::endl;

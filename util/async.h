@@ -20,48 +20,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "core/bounding_box.h"
+#pragma once
 
-#include <chrono>
-#include <limits>
-#include <random>
+#include <functional>
 
 namespace tinyrt {
-namespace {
-static constexpr auto kMinFloat = std::numeric_limits<float>::min();
-static constexpr auto kMaxFloat = std::numeric_limits<float>::max();
-}  // namespace
+class ThreadPool;
 
-BoundingBox::BoundingBox()
-    : BoundingBox(Vec3(kMaxFloat, kMaxFloat, kMaxFloat),
-                  Vec3(kMinFloat, kMinFloat, kMinFloat)) {}
+class Async final {
+ public:
+  Async(const Async&) = delete;
+  Async& operator=(const Async&) = delete;
+  ~Async();
 
-BoundingBox::BoundingBox(const Vec3& min, const Vec3& max)
-    : min_(min), max_(max), size_(max - min), center_((min_ + max_) / 2.f) {}
+  static Async& instance();
 
-bool BoundingBox::contains(const Vec3& point) const {
-  return point > min_ && point < max_;
-}
+  void submit(const std::function<void()>& function);
 
-const Vec3& BoundingBox::center() const { return center_; }
+ private:
+  Async();
 
-Vec3 BoundingBox::random() const {
-  if (min_.same(max_)) {
-    return min_;
-  }
-  static thread_local std::mt19937 generator;
-  std::uniform_real_distribution gen(0.f, 1.f);
-  Vec3 pos = size_;
-  for (auto i = 0; i < 3; ++i) {
-    pos[i] *= gen(generator);
-  }
-  return min_ + pos;
-}
-
-void BoundingBox::add(const Vec3& vec) {
-  min_ = min_.min(vec);
-  max_ = max_.max(vec);
-  size_ = max_ - min_;
-  center_ = (min_ + max_) / 2.f;
-}
+ private:
+  std::unique_ptr<ThreadPool> threadPool_;
+};
 }  // namespace tinyrt

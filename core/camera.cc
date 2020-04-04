@@ -22,10 +22,9 @@
 
 #include "core/camera.h"
 
+#include "core/constants.h"
+
 namespace tinyrt {
-
-const double kPI = std::acos(-1);
-
 Camera::Camera(const Vec3& position, const Vec3& direction, const Vec3& up,
                const float fov)
     : position_(position),
@@ -33,8 +32,8 @@ Camera::Camera(const Vec3& position, const Vec3& direction, const Vec3& up,
       up_(up.normalize()),
       fov_(fov) {}
 
-std::function<Ray(unsigned, unsigned)> Camera::adapt(
-    const unsigned width, const unsigned height) const {
+std::function<Ray(float, float)> Camera::adapt(const unsigned width,
+                                               const unsigned height) const {
   const auto aspectRatio = width * 1.f / height;
   const auto left = up_.cross(direction_);
   const auto fov = direction_.norm() * std::tan(fov_ / 360 * kPI);
@@ -43,9 +42,8 @@ std::function<Ray(unsigned, unsigned)> Camera::adapt(
   const auto topLeft = position_ + direction_ + adaptedUp + adaptedLeft;
   const auto xbasis = -adaptedLeft * 2.f / width;
   const auto ybasis = -adaptedUp * 2.f / height;
-  return
-      [position = position_, topLeft, xbasis, ybasis](unsigned x, unsigned y) {
-        return Ray(position, topLeft + xbasis * x + ybasis * y - position);
-      };
+  return [position = position_, topLeft, xbasis, ybasis](float x, float y) {
+    return Ray(position, topLeft + xbasis * x + ybasis * y - position);
+  };
 }
 }  // namespace tinyrt
