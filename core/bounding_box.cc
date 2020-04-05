@@ -47,6 +47,13 @@ const Vec3& BoundingBox::center() const { return center_; }
 
 const Vec3& BoundingBox::size() const { return size_; }
 
+const Vec3& BoundingBox::min() const { return min_; }
+const Vec3& BoundingBox::max() const { return max_; }
+
+float BoundingBox::area() const {
+  return (size_->x * size_->y + size_->x * size_->z + size_->y * size_->z) * 2;
+}
+
 Vec3 BoundingBox::random() const {
   if (min_.same(max_)) {
     return min_;
@@ -58,6 +65,16 @@ Vec3 BoundingBox::random() const {
     pos[i] *= gen(generator);
   }
   return min_ + pos;
+}
+
+std::pair<BoundingBox, BoundingBox> BoundingBox::cut(unsigned dim,
+                                                     float location) const {
+  location = std::max(std::min(location, max_[dim]), min_[dim]);
+  auto leftMax = max_;
+  leftMax[dim] = location;
+  auto rightMin = min_;
+  rightMin[dim] = location;
+  return {BoundingBox(min_, leftMax), BoundingBox(rightMin, max_)};
 }
 
 void BoundingBox::add(const Vec3& vec) {

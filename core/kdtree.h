@@ -22,30 +22,35 @@
 
 #pragma once
 
-#include "core/triangle.h"
+#include "core/bounding_box.h"
+#include "core/scene.h"
 
 namespace tinyrt {
-class BoundingBox final {
+class KdTree final {
  public:
-  BoundingBox();
-  BoundingBox(const Vec3& min, const Vec3& max);
+  struct Node;
+  using NodePtr = std::unique_ptr<Node>;
 
-  bool contains(const Vec3& point) const;
-  Vec3 random() const;
-  const Vec3& center() const;
-  const Vec3& size() const;
-  float area() const;
-  const Vec3& min() const;
-  const Vec3& max() const;
-  std::pair<BoundingBox, BoundingBox> cut(unsigned dim, float location) const;
-  void add(const Vec3& vec);
+ public:
+  explicit KdTree(const Scene& scene);
 
-  friend std::ostream& operator<<(std::ostream& os, const BoundingBox& bb);
+  const NodePtr& root() const { return root_; }
 
  private:
-  Vec3 min_;
-  Vec3 max_;
-  Vec3 size_;
-  Vec3 center_;
+  NodePtr const root_;
+};
+
+struct KdTree::Node {
+  const BoundingBox aabb;
+  const KdTree::NodePtr left;
+  const KdTree::NodePtr right;
+  const std::vector<const Triangle*> triangles;
+
+  Node(const BoundingBox& aabb, KdTree::NodePtr left, KdTree::NodePtr right,
+       std::vector<const Triangle*> triangles)
+      : aabb(aabb),
+        left(std::move(left)),
+        right(std::move(right)),
+        triangles(std::move(triangles)) {}
 };
 }  // namespace tinyrt

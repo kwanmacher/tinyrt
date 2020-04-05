@@ -22,30 +22,20 @@
 
 #pragma once
 
-#include "core/triangle.h"
+#include "core/intersecter.h"
+#include "core/kdtree.h"
 
 namespace tinyrt {
-class BoundingBox final {
+class KdTreeIntersecter final : public Intersecter {
  public:
-  BoundingBox();
-  BoundingBox(const Vec3& min, const Vec3& max);
-
-  bool contains(const Vec3& point) const;
-  Vec3 random() const;
-  const Vec3& center() const;
-  const Vec3& size() const;
-  float area() const;
-  const Vec3& min() const;
-  const Vec3& max() const;
-  std::pair<BoundingBox, BoundingBox> cut(unsigned dim, float location) const;
-  void add(const Vec3& vec);
-
-  friend std::ostream& operator<<(std::ostream& os, const BoundingBox& bb);
+  void initialize(const Scene& scene) override;
+  std::optional<Intersection> intersect(const Ray& ray) const override;
 
  private:
-  Vec3 min_;
-  Vec3 max_;
-  Vec3 size_;
-  Vec3 center_;
+  std::optional<Intersection> intersectInternal(
+      const Ray& ray, const KdTree::NodePtr& node) const;
+
+ private:
+  std::unique_ptr<KdTree> kdTree_;
 };
 }  // namespace tinyrt

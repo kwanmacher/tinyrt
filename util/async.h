@@ -28,6 +28,8 @@ namespace tinyrt {
 class Async final {
  public:
   static void submit(const std::function<void()>& function);
+  static void submitN(const std::function<void(unsigned)>& function,
+                      unsigned n);
 
  private:
   Async();

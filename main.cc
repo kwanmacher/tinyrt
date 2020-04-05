@@ -27,6 +27,7 @@
 
 #include "core/basic_intersecter.h"
 #include "core/camera.h"
+#include "core/kdtree_intersecter.h"
 #include "core/obj.h"
 #include "core/path_tracer.h"
 #include "core/phong_shader.h"
@@ -52,21 +53,21 @@ int main(const int argc, const char** argv) {
 
   Camera camera(Vec3(0.f, 1.f, 3.93f), Vec3(0.f, 0.f, -1.f),
                 Vec3(0.f, 1.f, 0.f), 39.f);
-  BasicIntersecter intersecter;
+  KdTreeIntersecter intersecter;
   PhongShader shader;
   PathTracer rayTracer;
   intersecter.initialize(*scene);
 
-  const unsigned width = 640;
-  const unsigned height = 640;
+  const unsigned width = 320;
+  const unsigned height = 320;
   const auto totalPixels = width * height;
   Vec3 result[width][height];
   std::atomic_int completed;
   std::promise<void> promise;
 
   const TraceOptions options{
-      .directRays = 120,
-      .indirectRays = 10,
+      .directRays = 100,
+      .indirectRays = 8,
       .shadowRays = 3,
   };
   auto rayGenerator = camera.adapt(width, height);

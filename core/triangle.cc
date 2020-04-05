@@ -26,4 +26,20 @@ namespace tinyrt {
 Triangle::Triangle(const std::array<Vertex, 3>& vertices,
                    const Material& material)
     : vertices_(vertices), material_(material) {}
+
+std::pair<float, float> Triangle::extent(unsigned dim) const {
+  auto pa = a().coord[dim];
+  auto pb = b().coord[dim];
+  auto pc = c().coord[dim];
+  if (pb < pa) {
+    std::swap(pa, pb);
+  }
+  if (pc < pb) {
+    std::swap(pb, pc);
+    if (pb < pa) {
+      std::swap(pa, pb);
+    }
+  }
+  return {pa, pc};
+}
 }  // namespace tinyrt

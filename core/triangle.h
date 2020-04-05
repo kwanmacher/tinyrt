@@ -51,6 +51,7 @@ class Triangle final {
   inline const Vertex& c() const { return vertices_[2]; }
   inline const std::array<Vertex, 3>& vertices() const { return vertices_; }
   inline const Material& material() const { return material_; }
+  std::pair<float, float> extent(unsigned dim) const;
 
   friend std::ostream& operator<<(std::ostream& os, const Triangle& triangle);
 

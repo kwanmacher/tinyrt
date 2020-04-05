@@ -28,8 +28,6 @@
 #include <tuple>
 #include <unordered_map>
 
-#include "core/constants.h"
-
 namespace tinyrt {
 namespace {
 static auto loadMtl(const std::string& path, std::vector<Material>& materials) {

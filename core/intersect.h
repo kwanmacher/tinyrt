@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include "core/bounding_box.h"
 #include "core/intersecter.h"
 #include "core/triangle.h"
 
@@ -53,5 +54,47 @@ std::optional<Intersection> intersect(const Ray& ray,
   }
   // TODO(kaikai): Normal interpolation.
   return Intersection(ray, t, triangle.a().normal, triangle.material());
+}
+
+bool intersect(const Ray& ray, const BoundingBox& aabb) {
+  float tmin = (aabb.min()->x - ray.origin->x) / ray.direction->x;
+  float tmax = (aabb.max()->x - ray.origin->x) / ray.direction->x;
+
+  if (tmin > tmax) {
+    std::swap(tmin, tmax);
+  }
+
+  float tymin = (aabb.min()->y - ray.origin->y) / ray.direction->y;
+  float tymax = (aabb.max()->y - ray.origin->y) / ray.direction->y;
+
+  if (tymin > tymax) {
+    std::swap(tymin, tymax);
+  }
+  if (tymin > tmin) {
+    tmin = tymin;
+  }
+  if (tymax < tmax) {
+    tmax = tymax;
+  }
+  if (tmax <= tmin) {
+    return false;
+  }
+
+  float tzmin = (aabb.min()->z - ray.origin->z) / ray.direction->z;
+  float tzmax = (aabb.max()->z - ray.origin->z) / ray.direction->z;
+
+  if (tzmin > tzmax) {
+    std::swap(tzmin, tzmax);
+  }
+  if (tzmin > tmin) {
+    tmin = tzmin;
+  }
+  if (tzmax < tmax) {
+    tmax = tzmax;
+  }
+  if (tmax <= tmin) {
+    return false;
+  }
+  return true;
 }
 }  // namespace tinyrt

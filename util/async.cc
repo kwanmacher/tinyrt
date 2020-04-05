@@ -69,4 +69,18 @@ void Async::submit(const std::function<void()>& function) {
   static ThreadPool threadPool(std::thread::hardware_concurrency());
   threadPool.submit(function);
 }
+
+void Async::submitN(const std::function<void(unsigned)>& function, unsigned n) {
+  std::promise<void> result;
+  std::atomic_int done = 0;
+  for (auto i = 0U; i < n; ++i) {
+    submit([function, i, n, &done, &result] {
+      function(i);
+      if (++done == n) {
+        result.set_value();
+      }
+    });
+  }
+  result.get_future().wait();
+}
 }  // namespace tinyrt
