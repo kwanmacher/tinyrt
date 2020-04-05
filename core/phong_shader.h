@@ -37,15 +37,17 @@ class PhongShader : public Shader {
     Color lumination;
     if (material->illuminationModel & Material::DIFFUSE) {
       lumination += light.material.emittance * material->diffuse *
-                    std::max(l.dot(intersection.normal), 0.f);
+                    std::max(l.dot(intersection.normal()), 0.f);
     }
-    if (material->illuminationModel & Material::SPECULAR &&
-        !light.material.specular.small()) {
-      const auto r = -l.reflect(intersection.normal);
+    if ((material->illuminationModel & Material::SPECULAR) &&
+        !material->specular.small()) {
+      const auto r = l.reflect(intersection.normal());
       const auto v = -intersection.ray.direction;
-      lumination +=
-          light.material.emittance * material->specular *
-          std::pow(std::max(r.dot(v), 0.f), material->specularExponent);
+      const auto base = r.dot(v);
+      if (base > 0) {
+        lumination += light.material.emittance * material->specular *
+                      std::pow(base, material->specularExponent);
+      }
     }
     lumination *= light.intensity(intersection.position);
     return lumination;

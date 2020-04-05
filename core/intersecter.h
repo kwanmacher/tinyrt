@@ -24,33 +24,10 @@
 
 #include <optional>
 
+#include "core/ray.h"
 #include "core/scene.h"
 
 namespace tinyrt {
-struct Ray {
-  Vec3 origin;
-  Vec3 direction;
-
-  Ray(const Vec3& origin, const Vec3& direction)
-      : origin(origin), direction(direction.normalize()) {}
-};
-
-struct Intersection {
-  Ray ray;
-  float time;
-  Vec3 position;
-  Vec3 normal;
-  const Material* material;
-
-  Intersection(const Ray& ray, const float time, const Vec3& normal,
-               const Material& material)
-      : ray(ray),
-        time(time),
-        position(ray.origin + ray.direction * time),
-        normal(normal.normalize()),
-        material(&material) {}
-};
-
 class Intersecter {
  public:
   virtual ~Intersecter() = default;

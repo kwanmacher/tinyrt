@@ -110,7 +110,7 @@ class Vec3 {
   inline Vec3 normalize() const& { return *this / this->norm(); }
 
   inline Vec3 reflect(const Vec3& normal) const {
-    return *this - normal * 2 * this->dot(normal);
+    return normal * 2 * this->dot(normal) - *this;
   }
 
   inline bool zero() const {

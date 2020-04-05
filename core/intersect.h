@@ -23,7 +23,7 @@
 #pragma once
 
 #include "core/bounding_box.h"
-#include "core/intersecter.h"
+#include "core/ray.h"
 #include "core/triangle.h"
 
 namespace tinyrt {
@@ -52,8 +52,7 @@ std::optional<Intersection> intersect(const Ray& ray,
   if (t <= EPSILON) {
     return std::nullopt;
   }
-  // TODO(kaikai): Normal interpolation.
-  return Intersection(ray, t, triangle.a().normal, triangle.material());
+  return Intersection(ray, t, Vec3(u, v, 0.f), triangle, triangle.material());
 }
 
 bool intersect(const Ray& ray, const BoundingBox& aabb) {

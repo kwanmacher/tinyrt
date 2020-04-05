@@ -51,24 +51,24 @@ int main(const int argc, const char** argv) {
   auto scene = std::move(cornellBox).moveToScene();
   std::cout << "Scene created: " << *scene << std::endl;
 
-  Camera camera(Vec3(0.f, 1.f, 3.93f), Vec3(0.f, 0.f, -1.f),
-                Vec3(0.f, 1.f, 0.f), 39.f);
+  Camera camera(Vec3(0.f, .8f, 3.93f), Vec3(0.f, 0.f, -1.f),
+                Vec3(0.f, 1.f, 0.f), 32.f);
   KdTreeIntersecter intersecter;
   PhongShader shader;
   PathTracer rayTracer;
   intersecter.initialize(*scene);
 
-  const unsigned width = 320;
-  const unsigned height = 320;
+  const unsigned width = 640;
+  const unsigned height = 508;
   const auto totalPixels = width * height;
   Vec3 result[width][height];
   std::atomic_int completed;
   std::promise<void> promise;
 
   const TraceOptions options{
-      .directRays = 100,
-      .indirectRays = 8,
-      .shadowRays = 3,
+      .directRays = 200,
+      .indirectRays = 3,
+      .shadowRays = 1,
   };
   auto rayGenerator = camera.adapt(width, height);
   for (auto i = 0; i < width; ++i) {

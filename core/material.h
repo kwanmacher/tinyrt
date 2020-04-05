@@ -42,6 +42,7 @@ struct Material {
   Vec3 diffuse;
   Vec3 specular;
   Vec3 emittance;
+  Vec3 transmission;
   IlluminationModel illuminationModel{ALL};
   float dissolve{1.f};
   float sharpness{60.f};

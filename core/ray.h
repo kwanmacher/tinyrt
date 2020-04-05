@@ -20,31 +20,48 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "core/ray_tracer.h"
+#pragma once
+
+#include <optional>
+
+#include "core/scene.h"
 
 namespace tinyrt {
-Color RayTracer::trace(const RaySampler& raySampler,
-                       const Intersecter& intersecter, const Scene& scene,
-                       const Shader& shader,
-                       const TraceOptions& options) const {
-  Color illumination;
-  const auto intersection = intersecter.intersect(raySampler());
-  if (intersection) {
-    for (const auto& light : scene.lights()) {
-      Vec3 illum = shader.shade(*intersection, *light);
-      if (!illum.small()) {
-        const auto lightVec = light->aabb.center() - intersection->position;
-        const Ray shadowRay(
-            intersection->position + intersection->normal() * 1e-4f, lightVec);
-        const auto shadowCheck = intersecter.intersect(shadowRay);
-        if (shadowCheck && shadowCheck->time < lightVec.norm() - 1e-3f) {
-          illum = Vec3();
-        }
-      }
-      illumination = illumination + illum;
+struct Ray {
+  Vec3 origin;
+  Vec3 direction;
+
+  Ray(const Vec3& origin, const Vec3& direction)
+      : origin(origin), direction(direction.normalize()) {}
+};
+
+struct Intersection {
+  Ray ray;
+  float time;
+  Vec3 position;
+  Vec3 uv;
+  const Triangle* triangle;
+  const Material* material;
+
+  Intersection(const Ray& ray, const float time, const Vec3& uv,
+               const Triangle& triangle, const Material& material)
+      : ray(ray),
+        time(time),
+        position(ray.origin + ray.direction * time),
+        uv(uv),
+        triangle(&triangle),
+        material(&material) {}
+
+  const Vec3& normal() const {
+    if (!normal_) {
+      normal_ = triangle->a().normal * (1 - uv->x - uv->y) +
+                triangle->b().normal * uv->x + triangle->c().normal * uv->y;
     }
-    illumination = illumination / M_PI;
+    return *normal_;
   }
-  return illumination;
-}
+
+ private:
+  // Computed on-demand.
+  mutable std::optional<Vec3> normal_;
+};
 }  // namespace tinyrt

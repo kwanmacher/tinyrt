@@ -56,6 +56,7 @@ static auto loadMtl(const std::string& path, std::vector<Material>& materials) {
         material = &(materials.emplace_back());
         matIndexMap.emplace(matName, materials.size() - 1);
       } break;
+      case 'T':
       case 'K': {
         if (!material) {
           throw std::runtime_error("No current material!");
@@ -74,6 +75,9 @@ static auto loadMtl(const std::string& path, std::vector<Material>& materials) {
             break;
           case 'e':
             material->emittance = value;
+            break;
+          case 'f':
+            material->transmission = value;
             break;
           default:
             break;
@@ -108,6 +112,12 @@ static auto loadMtl(const std::string& path, std::vector<Material>& materials) {
             material->illuminationModel =
                 static_cast<Material::IlluminationModel>(Material::DIFFUSE |
                                                          Material::SPECULAR);
+            break;
+          case 5:
+            material->illuminationModel =
+                static_cast<Material::IlluminationModel>(Material::DIFFUSE |
+                                                         Material::SPECULAR |
+                                                         Material::REFLECTION);
             break;
           default:
             break;
@@ -176,7 +186,7 @@ static auto loadObj(const std::string& path) {
           vectors[VERTEX].push_back(vec);
         } else if (op[1] == 'n') {
           lineStream >> vec->z;
-          vectors[NORMAL].push_back(vec);
+          vectors[NORMAL].push_back(vec.normalize());
         } else if (op[1] == 't') {
           vectors[TEXCOORD].push_back(vec);
         }

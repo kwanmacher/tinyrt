@@ -41,6 +41,29 @@ static Vec3 cosineSampledHemisphere(const Vec3& nx, const Vec3& ny,
   const Vec3 localSpaceVec(x, std::sqrtf(std::max(0.f, 1.f - u1)), y);
   return nx * localSpaceVec->x + ny * localSpaceVec->y + nz * localSpaceVec->z;
 }
+
+static std::pair<Vec3, float> fresnel(const Vec3& incoming, Vec3 normal,
+                                      const float refractionIndex) {
+  float cosi = incoming.dot(normal);
+  float etai = 1.f;
+  float etat = refractionIndex;
+  if (cosi < 0) {
+    cosi = -cosi;
+  } else {
+    std::swap(etai, etat);
+    normal = -normal;
+  }
+  float eta = etai / etat;
+  float k = 1 - eta * eta * (1 - cosi * cosi);
+  if (k < 0) {
+    return {Vec3(), 1.f};
+  }
+  float cost = std::sqrtf(k);
+  float Rs = ((etat * cosi) - (etai * cost)) / ((etat * cosi) + (etai * cost));
+  float Rp = ((etai * cosi) - (etat * cost)) / ((etai * cosi) + (etat * cost));
+  return {incoming * eta + normal * (eta * cosi - cost),
+          (Rs * Rs + Rp * Rp) / 2.f};
+}
 }  // namespace
 
 Color PathTracer::trace(const RaySampler& raySampler,
@@ -69,18 +92,19 @@ Color PathTracer::traceInternal(const Ray& ray, const Intersecter& intersecter,
   if (!intersection) {
     return options.background;
   }
+  const auto nextRayOrigin =
+      intersection->position + intersection->normal() * 1e-4f;
+
   Color directIllumination;
   for (const auto& light : scene.lights()) {
     Vec3 localIllumination = shader.shade(*intersection, *light);
     const unsigned shadowSamples = options.shadowRays;
     if (shadowSamples > 0 && !intersection->material->light() &&
         !localIllumination.zero()) {
-      const auto shadowRayOrigin =
-          intersection->position + intersection->normal * 1e-4f;
       unsigned occlusion = 0U;
       for (auto i = 0U; i < shadowSamples; ++i) {
         const auto lightVec = light->aabb.random() - intersection->position;
-        const Ray shadowRay(shadowRayOrigin, lightVec);
+        const Ray shadowRay(nextRayOrigin, lightVec);
         const auto shadowCheck = intersecter.intersect(shadowRay);
         if (shadowCheck && shadowCheck->time < lightVec.norm() - 1e-3f) {
           occlusion++;
@@ -91,27 +115,55 @@ Color PathTracer::traceInternal(const Ray& ray, const Intersecter& intersecter,
     directIllumination += localIllumination;
   }
 
+  Color refractedIllumination;
+  Vec3 reflectance = intersection->material->specular;
+  if (intersection->material->illuminationModel & Material::REFRACTION) {
+    const auto fres = fresnel(ray.direction, intersection->normal(),
+                              intersection->material->refractionIndex);
+    reflectance = Vec3(fres.second, fres.second, fres.second);
+    if (fres.second < 1) {
+      const Ray refractedRay(
+          intersection->normal().dot(ray.direction) > 0
+              ? nextRayOrigin
+              : intersection->position - intersection->normal() * 1e-4f,
+          fres.first);
+      refractedIllumination = traceInternal(refractedRay, intersecter, scene,
+                                            shader, options, depth + 1) *
+                              (1.f - fres.second);
+    }
+  }
+
+  Color reflectedIllumination;
+  if ((intersection->material->illuminationModel & Material::REFLECTION) &&
+      !reflectance.small()) {
+    const Ray reflectedRay(nextRayOrigin,
+                           -ray.direction.reflect(intersection->normal()));
+    reflectedIllumination = traceInternal(reflectedRay, intersecter, scene,
+                                          shader, options, depth + 1) *
+                            reflectance;
+  }
+
   Color indirectIllumination;
-  if (options.indirectRays > 0) {
-    const auto basis = intersection->normal.basis();
+  if (options.indirectRays > 0 && !intersection->material->diffuse.small()) {
+    const auto basis = intersection->normal().basis();
     auto indirectOptions = options;
     indirectOptions.indirectRays = options.indirectRays / 2;
     indirectOptions.shadowRays = 1;
 
     for (auto i = 0U; i < options.indirectRays; ++i) {
-      Ray indirectRay(
-          intersection->position + intersection->normal * 1e-4f,
-          cosineSampledHemisphere(std::get<0>(basis), std::get<1>(basis),
-                                  std::get<2>(basis)));
+      Ray indirectRay(nextRayOrigin, cosineSampledHemisphere(
+                                         std::get<0>(basis), std::get<1>(basis),
+                                         std::get<2>(basis)));
       indirectIllumination +=
           traceInternal(indirectRay, intersecter, scene, shader,
                         indirectOptions, depth + 1) *
-          indirectRay.direction.dot(intersection->normal);
+          indirectRay.direction.dot(intersection->normal());
     }
     const Color brdf = intersection->material->diffuse;
     indirectIllumination =
         indirectIllumination * brdf * 2.f / options.indirectRays;
   }
-  return directIllumination / M_PI + indirectIllumination;
+  return directIllumination / M_PI + reflectedIllumination +
+         refractedIllumination + indirectIllumination;
 }
 }  // namespace tinyrt

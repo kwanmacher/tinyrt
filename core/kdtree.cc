@@ -118,7 +118,6 @@ static KdTree::NodePtr build(std::vector<const Triangle*> triangles,
   std::vector<const Triangle*> rightTriangles;
   for (const auto* triangle : triangles) {
     const auto extent = triangle->extent(bestDim);
-    bool ha = false;
     if (extent.second >= bestSplit) {
       rightTriangles.push_back(triangle);
     }
