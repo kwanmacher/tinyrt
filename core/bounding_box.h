@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "core/triangle.h"
+#include "core/vec3.h"
 
 namespace tinyrt {
 class BoundingBox final {
@@ -37,8 +37,10 @@ class BoundingBox final {
   float area() const;
   const Vec3& min() const;
   const Vec3& max() const;
+  bool planar(const unsigned dim) const;
   std::pair<BoundingBox, BoundingBox> cut(unsigned dim, float location) const;
   void add(const Vec3& vec);
+  void clipTo(const BoundingBox& other);
 
   friend std::ostream& operator<<(std::ostream& os, const BoundingBox& bb);
 

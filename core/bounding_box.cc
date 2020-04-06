@@ -40,7 +40,7 @@ BoundingBox::BoundingBox(const Vec3& min, const Vec3& max)
     : min_(min), max_(max), size_(max - min), center_((min_ + max_) / 2.f) {}
 
 bool BoundingBox::contains(const Vec3& point) const {
-  return point > min_ && point < max_;
+  return point >= min_ && point <= max_;
 }
 
 const Vec3& BoundingBox::center() const { return center_; }
@@ -67,6 +67,11 @@ Vec3 BoundingBox::random() const {
   return min_ + pos;
 }
 
+bool BoundingBox::planar(const unsigned dim) const {
+  const float kEpsilon = 1e-6f;
+  return std::abs(size_[dim]) < kEpsilon;
+}
+
 std::pair<BoundingBox, BoundingBox> BoundingBox::cut(unsigned dim,
                                                      float location) const {
   location = std::max(std::min(location, max_[dim]), min_[dim]);
@@ -82,5 +87,16 @@ void BoundingBox::add(const Vec3& vec) {
   max_ = max_.max(vec);
   size_ = max_ - min_;
   center_ = (min_ + max_) / 2.f;
+}
+
+void BoundingBox::clipTo(const BoundingBox& other) {
+  for (auto i = 0U; i < 3; ++i) {
+    if (other.min_[i] > min_[i]) {
+      min_[i] = other.min_[i];
+    }
+    if (other.max_[i] < max_[i]) {
+      max_[i] = other.max_[i];
+    }
+  }
 }
 }  // namespace tinyrt

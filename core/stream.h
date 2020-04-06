@@ -49,15 +49,28 @@ std::ostream& operator<<(std::ostream& os, const Triangle& triangle) {
 }
 
 std::ostream& operator<<(std::ostream& os, const Scene& scene) {
-  os << "Scene{Triangles:" << std::endl;
-  for (auto i = 0; i < scene.triangles_.size(); ++i) {
-    os << "#" << i << ": " << *scene.triangles_.at(i) << std::endl;
+  constexpr auto triangleThreshold = 100U;
+  constexpr auto lightThreshold = 16U;
+
+  os << "Scene{Triangles: ";
+  if (scene.triangles_.size() <= triangleThreshold) {
+    os << std::endl;
+    for (auto i = 0; i < scene.triangles_.size(); ++i) {
+      os << "#" << i << ": " << *scene.triangles_.at(i) << std::endl;
+    }
+  } else {
+    os << scene.triangles_.size() << std::endl;
   }
-  os << "Lights:" << std::endl;
-  for (auto i = 0; i < scene.lights_.size(); ++i) {
-    os << "#" << i << ": " << *scene.lights_.at(i) << std::endl;
+
+  os << "Lights: ";
+  if (scene.lights_.size() <= lightThreshold) {
+    os << std::endl;
+    for (auto i = 0; i < scene.lights_.size(); ++i) {
+      os << "#" << i << ": " << *scene.lights_.at(i) << std::endl;
+    }
+  } else {
+    os << scene.lights_.size() << std::endl;
   }
-  os << "}";
   return os;
 }
 

@@ -32,8 +32,10 @@ class KdTreeIntersecter final : public Intersecter {
   std::optional<Intersection> intersect(const Ray& ray) const override;
 
  private:
-  std::optional<Intersection> intersectInternal(
-      const Ray& ray, const KdTree::NodePtr& node) const;
+  std::optional<Intersection> intersectInternal(const Ray& ray,
+                                                const KdTree::NodePtr& node,
+                                                const float t0,
+                                                const float t1) const;
 
  private:
   std::unique_ptr<KdTree> kdTree_;

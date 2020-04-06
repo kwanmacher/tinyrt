@@ -31,72 +31,124 @@ namespace tinyrt {
 namespace {
 static constexpr auto kMaxDepth = 15U;
 static constexpr auto kEpsilon = 1e-4f;
+static constexpr auto kTraversal = 1.f;
+static constexpr auto kIntersect = 1.5f;
+
+static float bias(unsigned leftCount, unsigned rightCount, float leftProb,
+                  float rightProb) {
+  if ((leftCount == 0 || rightCount == 0) &&
+      !(leftProb == 1 || rightProb == 1)) {
+    return 0.8f;
+  }
+  return 1.0f;
+}
+
+static float cost(float leftProb, float rightProb, unsigned leftCount,
+                  unsigned rightCount) {
+  return (bias(leftCount, rightCount, leftProb, rightProb) *
+          (kTraversal +
+           kIntersect * (leftProb * leftCount + rightProb * rightCount)));
+}
+
+enum PlanarPlacement { LEFT, RIGHT, UNKNOWN };
+
+static std::pair<float, PlanarPlacement> SAH(
+    const unsigned dim, const float split, const BoundingBox& aabb,
+    unsigned leftCount, unsigned rightCount, unsigned planarCount) {
+  if (aabb.size()[dim] == 0) {
+    return {std::numeric_limits<float>::max(), UNKNOWN};
+  }
+  const auto aabbs = aabb.cut(dim, split);
+  const auto saTotal = aabb.area();
+  const auto leftProb = aabbs.first.area() / saTotal;
+  const auto rightProb = aabbs.second.area() / saTotal;
+  if (leftProb == 0 || rightProb == 0) {
+    return {std::numeric_limits<float>::max(), UNKNOWN};
+  }
+  const auto leftCost =
+      cost(leftProb, rightProb, leftCount + planarCount, rightCount);
+  const auto rightCost =
+      cost(leftProb, rightProb, leftCount, rightCount + planarCount);
+  if (leftCost < rightCost) {
+    return {leftCost, LEFT};
+  } else {
+    return {rightCost, RIGHT};
+  }
+}
+
+static bool terminate(int N, float minCv) { return (minCv > kIntersect * N); }
 
 static KdTree::NodePtr build(std::vector<const Triangle*> triangles,
-                             const BoundingBox& aabb, const unsigned depth) {
+                             const BoundingBox& aabb, const unsigned depth,
+                             const std::optional<SplitPlane>& prevSplit) {
   if (triangles.empty()) {
     return nullptr;
   }
   if (triangles.size() <= 3 || depth >= kMaxDepth) {
-    return std::make_unique<KdTree::Node>(aabb, nullptr, nullptr,
-                                          std::move(triangles));
+    return std::make_unique<KdTree::Node>(std::move(triangles));
   }
   const float maxFloat = std::numeric_limits<float>::max();
   float minCosts[3] = {maxFloat, maxFloat, maxFloat};
-  float splits[3];
+  std::pair<float, PlanarPlacement> splits[3];
   Async::submitN(
       [&triangles, &aabb, &minCosts, &splits](unsigned dim) {
-        std::vector<std::pair<float, bool>> candidates;
-        const auto aabbMin = aabb.min()[dim];
-        const auto aabbMax = aabb.max()[dim];
+        enum Type { ENDING, PLANAR, STARTING };
+        using event_t = std::pair<float, Type>;
+        std::vector<event_t> candidates;
+        candidates.reserve(triangles.size() << 1);
         for (const auto* triangle : triangles) {
-          const auto extent = triangle->extent(dim);
-          if (extent.first - aabbMin > kEpsilon &&
-              aabbMax - extent.first > kEpsilon) {
-            candidates.emplace_back(extent.first, true);
-          }
-          if (extent.second - aabbMin > kEpsilon &&
-              aabbMax - extent.second > kEpsilon) {
-            candidates.emplace_back(extent.second, false);
+          auto clipped = triangle->aabb();
+          clipped.clipTo(aabb);
+          if (clipped.planar(dim)) {
+            candidates.emplace_back(clipped.min()[dim], PLANAR);
+          } else {
+            candidates.emplace_back(clipped.min()[dim], STARTING);
+            candidates.emplace_back(clipped.max()[dim], ENDING);
           }
         }
-        if (candidates.empty()) {
-          return;
-        }
-        std::sort(candidates.begin(), candidates.end(),
-                  [](auto& a, auto& b) { return a.first < b.first; });
+        std::sort(candidates.begin(), candidates.end(), [](auto& a, auto& b) {
+          return (a.first < b.first) ||
+                 (a.first == b.first && a.second < b.second);
+        });
 
         unsigned leftCount = 0U;
+        unsigned planarCount = 0U;
         unsigned rightCount = triangles.size();
-        auto candidate = candidates.begin();
-        do {
-          if (leftCount > 0 && rightCount > 0) {
-            const auto cut = aabb.cut(dim, candidate->first);
-            auto cost =
-                cut.first.area() * leftCount + cut.second.area() * rightCount;
-            if (cost < minCosts[dim]) {
-              minCosts[dim] = cost;
-              splits[dim] = candidate->first;
-            }
+        for (auto i = 0U; i < candidates.size(); ++i) {
+          const auto& candidate = candidates[i];
+          int starting = 0;
+          int planar = 0;
+          int ending = 0;
+          while (i < candidates.size() &&
+                 candidate.first == candidates[i].first &&
+                 candidates[i].second == ENDING) {
+            ++ending;
+            ++i;
           }
-
-          if (candidate->second) {
-            ++leftCount;
-          } else {
-            --rightCount;
+          while (i < candidates.size() &&
+                 candidate.first == candidates[i].first &&
+                 candidates[i].second == PLANAR) {
+            ++planar;
+            ++i;
           }
-
-          auto old = candidate++;
-          while (candidate != candidates.end() &&
-                 candidate->first - old->first < kEpsilon) {
-            if (candidate->second) {
-              ++leftCount;
-            } else {
-              --rightCount;
-            }
-            old = candidate++;
+          while (i < candidates.size() &&
+                 candidate.first == candidates[i].first &&
+                 candidates[i].second == STARTING) {
+            ++starting;
+            ++i;
           }
-        } while (candidate != candidates.end());
+          planarCount = planar;
+          rightCount -= planar + ending;
+          const auto sah = SAH(dim, candidate.first, aabb, leftCount,
+                               rightCount, planarCount);
+          if (sah.first < minCosts[dim]) {
+            minCosts[dim] = sah.first;
+            splits[dim].first = candidate.first;
+            splits[dim].second = sah.second;
+          }
+          leftCount += starting + planar;
+          planarCount = 0;
+        }
       },
       3);
 
@@ -107,44 +159,52 @@ static KdTree::NodePtr build(std::vector<const Triangle*> triangles,
       bestDim = dim;
     }
   }
-  if (bestDim == -1) {
-    return std::make_unique<KdTree::Node>(aabb, nullptr, nullptr,
-                                          std::move(triangles));
+  if (bestDim == -1 || terminate(triangles.size(), minCosts[bestDim])) {
+    return std::make_unique<KdTree::Node>(std::move(triangles));
   }
-  const float bestSplit = splits[bestDim];
-
-  const auto aabbs = aabb.cut(bestDim, bestSplit);
+  const auto bestSplit = splits[bestDim];
+  const SplitPlane split(bestDim, bestSplit.first);
+  if (prevSplit && split == *prevSplit) {
+    return std::make_unique<KdTree::Node>(std::move(triangles));
+  }
+  const auto aabbs = aabb.cut(bestDim, bestSplit.first);
   std::vector<const Triangle*> leftTriangles;
   std::vector<const Triangle*> rightTriangles;
   for (const auto* triangle : triangles) {
-    const auto extent = triangle->extent(bestDim);
-    if (extent.second >= bestSplit) {
-      rightTriangles.push_back(triangle);
-    }
-    if (extent.first <= bestSplit) {
-      leftTriangles.push_back(triangle);
+    const auto aabb = triangle->aabb();
+    if (aabb.min()[bestDim] == bestSplit.first &&
+        aabb.max()[bestDim] == bestSplit.first) {
+      if (bestSplit.second == LEFT) {
+        leftTriangles.push_back(triangle);
+      } else {
+        rightTriangles.push_back(triangle);
+      }
+    } else {
+      if (aabb.min()[bestDim] <= bestSplit.first) {
+        leftTriangles.push_back(triangle);
+      }
+      if (aabb.max()[bestDim] >= bestSplit.first) {
+        rightTriangles.push_back(triangle);
+      }
     }
   }
-
-  auto leftChild = build(std::move(leftTriangles), aabbs.first, depth + 1);
-  auto rightChild = build(std::move(rightTriangles), aabbs.second, depth + 1);
-  return std::make_unique<KdTree::Node>(aabb, std::move(leftChild),
-                                        std::move(rightChild),
-                                        std::vector<const Triangle*>());
+  triangles.clear();
+  auto leftChild =
+      build(std::move(leftTriangles), aabbs.first, depth + 1, split);
+  auto rightChild =
+      build(std::move(rightTriangles), aabbs.second, depth + 1, split);
+  return std::make_unique<KdTree::Node>(split, std::move(leftChild),
+                                        std::move(rightChild));
 }
 
 static KdTree::NodePtr build(const Scene& scene) {
-  BoundingBox aabb;
   std::vector<const Triangle*> triangles;
   for (const auto& triangle : scene.triangles()) {
-    for (const auto& vertex : triangle->vertices()) {
-      aabb.add(vertex.coord);
-    }
     triangles.push_back(triangle.get());
   }
-  return build(std::move(triangles), aabb, 0);
+  return build(std::move(triangles), scene.aabb(), 0, std::nullopt);
 }
 }  // namespace
 
-KdTree::KdTree(const Scene& scene) : root_(build(scene)) {}
+KdTree::KdTree(const Scene& scene) : root_(build(scene)), aabb_(scene.aabb()) {}
 }  // namespace tinyrt

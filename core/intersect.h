@@ -55,7 +55,8 @@ std::optional<Intersection> intersect(const Ray& ray,
   return Intersection(ray, t, Vec3(u, v, 0.f), triangle, triangle.material());
 }
 
-bool intersect(const Ray& ray, const BoundingBox& aabb) {
+std::optional<std::pair<float, float>> intersect(const Ray& ray,
+                                                 const BoundingBox& aabb) {
   float tmin = (aabb.min()->x - ray.origin->x) / ray.direction->x;
   float tmax = (aabb.max()->x - ray.origin->x) / ray.direction->x;
 
@@ -76,7 +77,7 @@ bool intersect(const Ray& ray, const BoundingBox& aabb) {
     tmax = tymax;
   }
   if (tmax <= tmin) {
-    return false;
+    return std::nullopt;
   }
 
   float tzmin = (aabb.min()->z - ray.origin->z) / ray.direction->z;
@@ -92,8 +93,8 @@ bool intersect(const Ray& ray, const BoundingBox& aabb) {
     tmax = tzmax;
   }
   if (tmax <= tmin) {
-    return false;
+    return std::nullopt;
   }
-  return true;
+  return std::make_pair(tmin, tmax);
 }
 }  // namespace tinyrt

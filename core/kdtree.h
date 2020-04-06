@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <optional>
+
 #include "core/bounding_box.h"
 #include "core/scene.h"
 
@@ -35,22 +37,35 @@ class KdTree final {
   explicit KdTree(const Scene& scene);
 
   const NodePtr& root() const { return root_; }
+  const BoundingBox& aabb() const { return aabb_; }
 
  private:
   NodePtr const root_;
+  const BoundingBox aabb_;
+};
+
+struct SplitPlane {
+  const unsigned dim;
+  const float split;
+
+  SplitPlane(const unsigned dim, const float split) : dim(dim), split(split) {}
+
+  bool operator==(const SplitPlane& other) const {
+    return dim == other.dim && split == other.split;
+  }
 };
 
 struct KdTree::Node {
-  const BoundingBox aabb;
+  const std::optional<SplitPlane> split;
   const KdTree::NodePtr left;
   const KdTree::NodePtr right;
   const std::vector<const Triangle*> triangles;
 
-  Node(const BoundingBox& aabb, KdTree::NodePtr left, KdTree::NodePtr right,
-       std::vector<const Triangle*> triangles)
-      : aabb(aabb),
-        left(std::move(left)),
-        right(std::move(right)),
-        triangles(std::move(triangles)) {}
+  Node(const std::optional<SplitPlane>& split, KdTree::NodePtr left,
+       KdTree::NodePtr right)
+      : split(split), left(std::move(left)), right(std::move(right)) {}
+
+  explicit Node(std::vector<const Triangle*> triangles)
+      : triangles(std::move(triangles)) {}
 };
 }  // namespace tinyrt

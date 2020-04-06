@@ -20,6 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <chrono>
 #include <fstream>
 #include <future>
 #include <iostream>
@@ -60,33 +61,44 @@ int main(const int argc, const char** argv) {
 
   const unsigned width = 640;
   const unsigned height = 508;
-  const auto totalPixels = width * height;
+  const unsigned block = 8;
+  const auto totalBlocks =
+      ((width + block - 1) / block) * ((height + block - 1) / block);
   Vec3 result[width][height];
   std::atomic_int completed;
   std::promise<void> promise;
 
   const TraceOptions options{
-      .directRays = 200,
+      .directRays = 10,
       .indirectRays = 3,
       .shadowRays = 1,
   };
   auto rayGenerator = camera.adapt(width, height);
-  for (auto i = 0; i < width; ++i) {
-    for (auto j = 0; j < height; ++j) {
+
+  std::cout << "Rendering started." << std::endl;
+  const auto begin = std::chrono::steady_clock::now();
+  for (auto i = 0; i < width; i += block) {
+    for (auto j = 0; j < height; j += block) {
       Async::submit([&, i, j] {
         static thread_local std::mt19937 generator;
         std::uniform_real_distribution gen(0.f, 1.f);
-        const RaySampler raySampler([&] {
-          return rayGenerator(i + gen(generator), j + gen(generator));
-        });
-        result[i][j] =
-            rayTracer.trace(raySampler, intersecter, *scene, shader, options);
-        const auto completedPixels = ++completed;
-        if (completedPixels % (totalPixels / 100) == 0) {
-          std::cout << "Finished " << completed << "/" << totalPixels
+        unsigned kTarget = std::min(width, i + block);
+        unsigned lTarget = std::min(height, j + block);
+        for (auto k = i; k < kTarget; ++k) {
+          for (auto l = j; l < lTarget; ++l) {
+            const RaySampler raySampler([&] {
+              return rayGenerator(k + gen(generator), l + gen(generator));
+            });
+            result[k][l] = rayTracer.trace(raySampler, intersecter, *scene,
+                                           shader, options);
+          }
+        }
+        const auto completedBlocks = ++completed;
+        if (completedBlocks % (totalBlocks / 100) == 0) {
+          std::cout << "Finished " << completedBlocks << "/" << totalBlocks
                     << std::endl;
         }
-        if (completedPixels == totalPixels) {
+        if (completedBlocks == totalBlocks) {
           std::cout << "Completed!" << std::endl;
           promise.set_value();
         }
@@ -94,6 +106,11 @@ int main(const int argc, const char** argv) {
     }
   }
   promise.get_future().wait();
+  std::cout << "Rendering finished. Time elapsed="
+            << std::chrono::duration_cast<std::chrono::seconds>(
+                   std::chrono::steady_clock::now() - begin)
+                   .count()
+            << "s." << std::endl;
 
   std::ofstream ppm(flags.get<kOutPath>());
   ppm << "P3" << std::endl;

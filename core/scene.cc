@@ -67,6 +67,17 @@ static std::vector<std::unique_ptr<Light>> makeLights(
                  });
   return out;
 }
+
+static BoundingBox computeAABB(
+    const std::vector<std::unique_ptr<Triangle>>& triangles) {
+  BoundingBox aabb;
+  for (const auto& triangle : triangles) {
+    for (const auto& vertex : triangle->vertices()) {
+      aabb.add(vertex.coord);
+    }
+  }
+  return aabb;
+}
 }  // namespace
 
 Scene::Scene(std::vector<Vec3> vertices, std::vector<Vec3> texcoords,
@@ -79,7 +90,8 @@ Scene::Scene(std::vector<Vec3> vertices, std::vector<Vec3> texcoords,
       materials_(std::move(materials)),
       triangles_(makeTriangles(vertices_, texcoords_, normals_, materials_,
                                triangles)),
-      lights_(makeLights(materials_, lights)) {}
+      lights_(makeLights(materials_, lights)),
+      aabb_(computeAABB(triangles_)) {}
 
 const std::vector<std::unique_ptr<Triangle>>& Scene::triangles() const {
   return triangles_;
@@ -88,4 +100,6 @@ const std::vector<std::unique_ptr<Triangle>>& Scene::triangles() const {
 const std::vector<std::unique_ptr<Light>>& Scene::lights() const {
   return lights_;
 }
+
+const BoundingBox& Scene::aabb() const { return aabb_; }
 }  // namespace tinyrt

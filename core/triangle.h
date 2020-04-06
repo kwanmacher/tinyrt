@@ -25,6 +25,7 @@
 #include <array>
 #include <iostream>
 
+#include "core/bounding_box.h"
 #include "core/material.h"
 #include "core/vec3.h"
 
@@ -51,7 +52,7 @@ class Triangle final {
   inline const Vertex& c() const { return vertices_[2]; }
   inline const std::array<Vertex, 3>& vertices() const { return vertices_; }
   inline const Material& material() const { return material_; }
-  std::pair<float, float> extent(unsigned dim) const;
+  BoundingBox aabb() const;
 
   friend std::ostream& operator<<(std::ostream& os, const Triangle& triangle);
 

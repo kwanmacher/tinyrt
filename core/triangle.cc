@@ -27,19 +27,11 @@ Triangle::Triangle(const std::array<Vertex, 3>& vertices,
                    const Material& material)
     : vertices_(vertices), material_(material) {}
 
-std::pair<float, float> Triangle::extent(unsigned dim) const {
-  auto pa = a().coord[dim];
-  auto pb = b().coord[dim];
-  auto pc = c().coord[dim];
-  if (pb < pa) {
-    std::swap(pa, pb);
+BoundingBox Triangle::aabb() const {
+  BoundingBox aabb;
+  for (auto i = 0U; i < 3; ++i) {
+    aabb.add(vertices_[i].coord);
   }
-  if (pc < pb) {
-    std::swap(pb, pc);
-    if (pb < pa) {
-      std::swap(pa, pb);
-    }
-  }
-  return {pa, pc};
+  return aabb;
 }
 }  // namespace tinyrt

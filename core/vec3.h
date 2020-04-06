@@ -66,6 +66,14 @@ class Vec3 {
     return v_.x < other->x && v_.y < other->y && v_.z < other->z;
   }
 
+  inline bool operator>=(const Vec3& other) const {
+    return v_.x >= other->x && v_.y >= other->y && v_.z >= other->z;
+  }
+
+  inline bool operator<=(const Vec3& other) const {
+    return v_.x <= other->x && v_.y <= other->y && v_.z <= other->z;
+  }
+
   inline bool operator==(const Vec3 other) const {
     return v_.x == other->x && v_.y == other->y && v_.z == other->z;
   }

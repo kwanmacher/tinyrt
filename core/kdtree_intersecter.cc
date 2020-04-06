@@ -23,10 +23,13 @@
 #include "core/kdtree_intersecter.h"
 
 #include <exception>
+#include <stack>
 
 #include "core/intersect.h"
 
 namespace tinyrt {
+
+static constexpr auto kEpsilon = 1e-5f;
 
 void KdTreeIntersecter::initialize(const Scene& scene) {
   kdTree_ = std::make_unique<KdTree>(scene);
@@ -36,35 +39,56 @@ std::optional<Intersection> KdTreeIntersecter::intersect(const Ray& ray) const {
   if (!kdTree_) {
     throw std::runtime_error("Must initialize with a scene first!");
   }
-  return intersectInternal(ray, kdTree_->root());
+  if (const auto aabbIntersect = ::tinyrt::intersect(ray, kdTree_->aabb())) {
+    return intersectInternal(ray, kdTree_->root(), aabbIntersect->first,
+                             aabbIntersect->second);
+  }
+  return std::nullopt;
 }
 
 std::optional<Intersection> KdTreeIntersecter::intersectInternal(
-    const Ray& ray, const KdTree::NodePtr& node) const {
-  if (!node) {
-    return std::nullopt;
-  }
-  if (!::tinyrt::intersect(ray, node->aabb)) {
-    return std::nullopt;
-  }
-  if (node->left || node->right) {
-    const auto leftHit = intersectInternal(ray, node->left);
-    const auto rightHit = intersectInternal(ray, node->right);
-    if (leftHit && rightHit) {
-      return leftHit->time < rightHit->time ? leftHit : rightHit;
-    } else {
-      return leftHit ?: rightHit;
+    const Ray& ray, const KdTree::NodePtr& node, const float t0,
+    const float t1) const {
+  using node_visitor_t = std::tuple<KdTree::Node*, float, float>;
+  std::stack<node_visitor_t> stack;
+  stack.emplace(node.get(), t0, t1);
+  while (!stack.empty()) {
+    KdTree::Node* currentNode;
+    float tEntry, tExit;
+    std::tie(currentNode, tEntry, tExit) = stack.top();
+    stack.pop();
+    while (currentNode->split) {
+      const auto dim = currentNode->split->dim;
+      const auto split = currentNode->split->split;
+      const auto ts = (split - ray.origin[dim]) / ray.direction[dim];
+      const bool leftFirst = ray.direction[dim] > 0;
+      KdTree::Node* near =
+          leftFirst ? currentNode->left.get() : currentNode->right.get();
+      KdTree::Node* far =
+          leftFirst ? currentNode->right.get() : currentNode->left.get();
+      if (ts > tExit) {
+        currentNode = near;
+      } else if (ts < tEntry) {
+        currentNode = far;
+      } else {
+        stack.emplace(far, ts, tExit);
+        currentNode = near;
+        tExit = ts;
+      }
     }
-  } else {
     std::optional<Intersection> intersection;
-    for (const auto* triangle : node->triangles) {
+    for (const auto* triangle : currentNode->triangles) {
       auto candidate = ::tinyrt::intersect(ray, *triangle);
       if (candidate &&
           (!intersection || intersection->time > candidate->time)) {
         intersection = candidate;
       }
     }
-    return intersection;
+    if (intersection && (intersection->time >= tEntry - kEpsilon &&
+                         intersection->time <= tExit + kEpsilon)) {
+      return intersection;
+    }
   }
+  return std::nullopt;
 }
 }  // namespace tinyrt

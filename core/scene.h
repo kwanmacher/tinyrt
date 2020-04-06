@@ -25,6 +25,7 @@
 #include <memory>
 #include <vector>
 
+#include "core/bounding_box.h"
 #include "core/light.h"
 #include "core/triangle.h"
 #include "core/vec3.h"
@@ -47,6 +48,7 @@ class Scene final {
 
   const std::vector<std::unique_ptr<Triangle>>& triangles() const;
   const std::vector<std::unique_ptr<Light>>& lights() const;
+  const BoundingBox& aabb() const;
 
   friend std::ostream& operator<<(std::ostream& os, const Scene& scene);
 
@@ -57,5 +59,6 @@ class Scene final {
   const std::vector<Material> materials_;
   const std::vector<std::unique_ptr<Triangle>> triangles_;
   const std::vector<std::unique_ptr<Light>> lights_;
+  const BoundingBox aabb_;
 };
 }  // namespace tinyrt
