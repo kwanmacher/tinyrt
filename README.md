@@ -11,4 +11,4 @@ Here's a couple of things I'm striving for for this project:
 Here's some current rendered results using path tracing:
 ![Cornell box original. Path tracing with tinyrt.](asset/cornell_box_output.png)
 
-![Cornell box with spheres. Path tracing with tinyrt.](asset/cornell_box_sphere_output.png)
+![Cornell box with spheres. Path tracing with tinyrt.](asset/cornell_box_sphere_output_2.png)
