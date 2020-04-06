@@ -147,7 +147,7 @@ Color PathTracer::traceInternal(const Ray& ray, const Intersecter& intersecter,
   if (options.indirectRays > 0 && !intersection->material->diffuse.small()) {
     const auto basis = intersection->normal().basis();
     auto indirectOptions = options;
-    indirectOptions.indirectRays = options.indirectRays / 2;
+    indirectOptions.indirectRays = options.indirectRays;  // / 2;
     indirectOptions.shadowRays = 1;
 
     for (auto i = 0U; i < options.indirectRays; ++i) {

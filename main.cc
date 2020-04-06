@@ -69,8 +69,8 @@ int main(const int argc, const char** argv) {
   std::promise<void> promise;
 
   const TraceOptions options{
-      .directRays = 10,
-      .indirectRays = 3,
+      .directRays = 300,
+      .indirectRays = 1,
       .shadowRays = 1,
   };
   auto rayGenerator = camera.adapt(width, height);
