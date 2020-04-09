@@ -24,6 +24,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <tuple>
 
 namespace tinyrt {
 class Vec3 {

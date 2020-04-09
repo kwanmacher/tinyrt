@@ -25,6 +25,7 @@
 #include <future>
 #include <limits>
 
+#include "core/intersect.h"
 #include "util/async.h"
 
 namespace tinyrt {
@@ -33,6 +34,58 @@ static constexpr auto kMaxDepth = 15U;
 static constexpr auto kEpsilon = 1e-4f;
 static constexpr auto kTraversal = 1.f;
 static constexpr auto kIntersect = 1.5f;
+
+class DefaultNode final : public KdTree::Node {
+ public:
+  const std::optional<SplitPlane>& split() const override { return split_; }
+
+  const KdTree::NodePtr& left() const override { return left_; }
+
+  const KdTree::NodePtr& right() const override { return right_; }
+
+  std::optional<Intersection> intersect(const Ray& ray, const float tEntry,
+                                        const float tExit) const override {
+    std::optional<Intersection> intersection;
+    for (const auto* triangle : triangles_) {
+      auto candidate = ::tinyrt::intersect(ray, *triangle);
+      if (candidate &&
+          (candidate->time >= tEntry - kEpsilon &&
+           candidate->time <= tExit + kEpsilon) &&
+          (!intersection || intersection->time > candidate->time)) {
+        intersection = candidate;
+      }
+    }
+    return intersection;
+  }
+
+  DefaultNode(const std::optional<SplitPlane>& split, KdTree::NodePtr left,
+              KdTree::NodePtr right)
+      : split_(split), left_(std::move(left)), right_(std::move(right)) {}
+
+  explicit DefaultNode(std::vector<const Triangle*> triangles)
+      : triangles_(std::move(triangles)) {}
+
+ private:
+  const std::optional<SplitPlane> split_;
+  const KdTree::NodePtr left_;
+  const KdTree::NodePtr right_;
+  const std::vector<const Triangle*> triangles_;
+};
+
+class DefaultNodeFactory final : public KdTree::NodeFactory {
+ public:
+  KdTree::NodePtr createIntermediate(const std::optional<SplitPlane>& split,
+                                     KdTree::NodePtr left,
+                                     KdTree::NodePtr right) const override {
+    return std::make_unique<DefaultNode>(split, std::move(left),
+                                         std::move(right));
+  }
+
+  KdTree::NodePtr createLeaf(
+      std::vector<const Triangle*> triangles) const override {
+    return std::make_unique<DefaultNode>(std::move(triangles));
+  }
+};
 
 static float bias(unsigned leftCount, unsigned rightCount, float leftProb,
                   float rightProb) {
@@ -80,12 +133,13 @@ static bool terminate(int N, float minCv) { return (minCv > kIntersect * N); }
 
 static KdTree::NodePtr build(std::vector<const Triangle*> triangles,
                              const BoundingBox& aabb, const unsigned depth,
-                             const std::optional<SplitPlane>& prevSplit) {
+                             const std::optional<SplitPlane>& prevSplit,
+                             const KdTree::NodeFactory& nodeFactory) {
   if (triangles.empty()) {
     return nullptr;
   }
   if (triangles.size() <= 3 || depth >= kMaxDepth) {
-    return std::make_unique<KdTree::Node>(std::move(triangles));
+    return nodeFactory.createLeaf(std::move(triangles));
   }
   const float maxFloat = std::numeric_limits<float>::max();
   float minCosts[3] = {maxFloat, maxFloat, maxFloat};
@@ -160,12 +214,12 @@ static KdTree::NodePtr build(std::vector<const Triangle*> triangles,
     }
   }
   if (bestDim == -1 || terminate(triangles.size(), minCosts[bestDim])) {
-    return std::make_unique<KdTree::Node>(std::move(triangles));
+    return nodeFactory.createLeaf(std::move(triangles));
   }
   const auto bestSplit = splits[bestDim];
   const SplitPlane split(bestDim, bestSplit.first);
   if (prevSplit && split == *prevSplit) {
-    return std::make_unique<KdTree::Node>(std::move(triangles));
+    return nodeFactory.createLeaf(std::move(triangles));
   }
   const auto aabbs = aabb.cut(bestDim, bestSplit.first);
   std::vector<const Triangle*> leftTriangles;
@@ -189,22 +243,28 @@ static KdTree::NodePtr build(std::vector<const Triangle*> triangles,
     }
   }
   triangles.clear();
-  auto leftChild =
-      build(std::move(leftTriangles), aabbs.first, depth + 1, split);
-  auto rightChild =
-      build(std::move(rightTriangles), aabbs.second, depth + 1, split);
-  return std::make_unique<KdTree::Node>(split, std::move(leftChild),
+  auto leftChild = build(std::move(leftTriangles), aabbs.first, depth + 1,
+                         split, nodeFactory);
+  auto rightChild = build(std::move(rightTriangles), aabbs.second, depth + 1,
+                          split, nodeFactory);
+  return nodeFactory.createIntermediate(split, std::move(leftChild),
                                         std::move(rightChild));
 }
 
-static KdTree::NodePtr build(const Scene& scene) {
+static KdTree::NodePtr build(const Scene& scene,
+                             std::unique_ptr<KdTree::NodeFactory> nodeFactory) {
   std::vector<const Triangle*> triangles;
   for (const auto& triangle : scene.triangles()) {
     triangles.push_back(triangle.get());
   }
-  return build(std::move(triangles), scene.aabb(), 0, std::nullopt);
+  return build(std::move(triangles), scene.aabb(), 0, std::nullopt,
+               *nodeFactory);
 }
 }  // namespace
 
-KdTree::KdTree(const Scene& scene) : root_(build(scene)), aabb_(scene.aabb()) {}
+KdTree::KdTree(const Scene& scene,
+               std::unique_ptr<KdTree::NodeFactory> nodeFactory)
+    : root_(build(scene, nodeFactory ? std::move(nodeFactory)
+                                     : std::make_unique<DefaultNodeFactory>())),
+      aabb_(scene.aabb()) {}
 }  // namespace tinyrt

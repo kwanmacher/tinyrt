@@ -25,16 +25,19 @@
 #include <optional>
 
 #include "core/bounding_box.h"
+#include "core/ray.h"
 #include "core/scene.h"
 
 namespace tinyrt {
 class KdTree final {
  public:
-  struct Node;
+  class Node;
+  class NodeFactory;
   using NodePtr = std::unique_ptr<Node>;
 
  public:
-  explicit KdTree(const Scene& scene);
+  explicit KdTree(const Scene& scene,
+                  std::unique_ptr<NodeFactory> nodeFactory = nullptr);
 
   const NodePtr& root() const { return root_; }
   const BoundingBox& aabb() const { return aabb_; }
@@ -55,17 +58,24 @@ struct SplitPlane {
   }
 };
 
-struct KdTree::Node {
-  const std::optional<SplitPlane> split;
-  const KdTree::NodePtr left;
-  const KdTree::NodePtr right;
-  const std::vector<const Triangle*> triangles;
+class KdTree::Node {
+ public:
+  virtual ~Node() = default;
+  virtual const std::optional<SplitPlane>& split() const = 0;
+  virtual const KdTree::NodePtr& left() const = 0;
+  virtual const KdTree::NodePtr& right() const = 0;
+  virtual std::optional<Intersection> intersect(const Ray& ray,
+                                                const float tEntry,
+                                                const float tExit) const = 0;
+};
 
-  Node(const std::optional<SplitPlane>& split, KdTree::NodePtr left,
-       KdTree::NodePtr right)
-      : split(split), left(std::move(left)), right(std::move(right)) {}
-
-  explicit Node(std::vector<const Triangle*> triangles)
-      : triangles(std::move(triangles)) {}
+class KdTree::NodeFactory {
+ public:
+  virtual ~NodeFactory() = default;
+  virtual KdTree::NodePtr createIntermediate(
+      const std::optional<SplitPlane>& split, KdTree::NodePtr left,
+      KdTree::NodePtr right) const = 0;
+  virtual KdTree::NodePtr createLeaf(
+      std::vector<const Triangle*> triangles) const = 0;
 };
 }  // namespace tinyrt

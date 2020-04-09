@@ -34,11 +34,11 @@ static Vec3 cosineSampledHemisphere(const Vec3& nx, const Vec3& ny,
   std::uniform_real_distribution gen(0.f, 1.f);
   const float u1 = gen(generator);
   const float u2 = gen(generator);
-  const float r = std::sqrtf(u1);
+  const float r = ::sqrtf(u1);
   const float theta = 2 * M_PI * u2;
-  const float x = r * std::cosf(theta);
-  const float y = r * std::sinf(theta);
-  const Vec3 localSpaceVec(x, std::sqrtf(std::max(0.f, 1.f - u1)), y);
+  const float x = r * ::cosf(theta);
+  const float y = r * ::sinf(theta);
+  const Vec3 localSpaceVec(x, ::sqrtf(std::max(0.f, 1.f - u1)), y);
   return nx * localSpaceVec->x + ny * localSpaceVec->y + nz * localSpaceVec->z;
 }
 
@@ -58,7 +58,7 @@ static std::pair<Vec3, float> fresnel(const Vec3& incoming, Vec3 normal,
   if (k < 0) {
     return {Vec3(), 1.f};
   }
-  float cost = std::sqrtf(k);
+  float cost = ::sqrtf(k);
   float Rs = ((etat * cosi) - (etai * cost)) / ((etat * cosi) + (etai * cost));
   float Rp = ((etai * cosi) - (etat * cost)) / ((etai * cosi) + (etat * cost));
   return {incoming * eta + normal * (eta * cosi - cost),

@@ -57,15 +57,15 @@ std::optional<Intersection> KdTreeIntersecter::intersectInternal(
     float tEntry, tExit;
     std::tie(currentNode, tEntry, tExit) = stack.top();
     stack.pop();
-    while (currentNode->split) {
-      const auto dim = currentNode->split->dim;
-      const auto split = currentNode->split->split;
-      const auto ts = (split - ray.origin[dim]) / ray.direction[dim];
+    while (auto& split = currentNode->split()) {
+      const auto dim = split->dim;
+      const auto pos = split->split;
+      const auto ts = (pos - ray.origin[dim]) / ray.direction[dim];
       const bool leftFirst = ray.direction[dim] > 0;
       KdTree::Node* near =
-          leftFirst ? currentNode->left.get() : currentNode->right.get();
+          leftFirst ? currentNode->left().get() : currentNode->right().get();
       KdTree::Node* far =
-          leftFirst ? currentNode->right.get() : currentNode->left.get();
+          leftFirst ? currentNode->right().get() : currentNode->left().get();
       if (ts > tExit) {
         currentNode = near;
       } else if (ts < tEntry) {
@@ -76,16 +76,8 @@ std::optional<Intersection> KdTreeIntersecter::intersectInternal(
         tExit = ts;
       }
     }
-    std::optional<Intersection> intersection;
-    for (const auto* triangle : currentNode->triangles) {
-      auto candidate = ::tinyrt::intersect(ray, *triangle);
-      if (candidate &&
-          (!intersection || intersection->time > candidate->time)) {
-        intersection = candidate;
-      }
-    }
-    if (intersection && (intersection->time >= tEntry - kEpsilon &&
-                         intersection->time <= tExit + kEpsilon)) {
+    const auto intersection = currentNode->intersect(ray, tEntry, tExit);
+    if (intersection) {
       return intersection;
     }
   }

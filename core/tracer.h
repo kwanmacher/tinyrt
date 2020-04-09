@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <functional>
+
 #include "core/intersecter.h"
 #include "core/shader.h"
 
