@@ -22,8 +22,6 @@
 
 #pragma once
 
-#include <iomanip>
-
 #include "core/bounding_box.h"
 #include "core/obj.h"
 #include "core/scene.h"
@@ -79,12 +77,6 @@ std::ostream& operator<<(std::ostream& os, const Obj& obj) {
      << ", texcoords=" << obj.texcoords_.size()
      << ", normals=" << obj.normals_.size() << ", faces=" << obj.faces_.size()
      << "}";
-  return os;
-}
-
-std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
-  os << "Vec3{x=" << std::fixed << std::setprecision(4) << vec->x
-     << ",y=" << vec->y << ",z=" << vec->z << "}";
   return os;
 }
 
