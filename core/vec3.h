@@ -35,7 +35,7 @@ class Vec3T {
   using vec3_t = Vec3T<TFloat, TBool>;
 
  public:
-  using float_type = TFloat;
+  using float_t = TFloat;
 
  public:
   Vec3T() : Vec3T(.0f, .0f, .0f) {}

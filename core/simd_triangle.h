@@ -31,6 +31,8 @@
 namespace tinyrt {
 template <typename TVec3>
 struct SimdTriangle final {
+  using vec3_t = TVec3;
+
   const std::array<TVec3, 3> vertices;
   const std::vector<const Triangle*> sources;
 
@@ -53,7 +55,7 @@ template <typename TVec3>
 std::vector<SimdTriangle<TVec3>> buildSimdTriangles(
     const std::vector<const Triangle*>& triangles) {
   static constexpr auto kWidth =
-      sizeof(typename TVec3::float_type) / sizeof(float);
+      sizeof(typename TVec3::float_t) / sizeof(float);
   std::vector<SimdTriangle<TVec3>> ret;
   alignas(32) float buffer[3][kWidth];
   std::array<TVec3, 3> vertices;

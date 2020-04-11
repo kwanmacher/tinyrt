@@ -36,6 +36,7 @@
 #include "core/simd_kdtree_node.h"
 #include "core/stream.h"
 #include "util/async.h"
+#include "util/capabilities.h"
 #include "util/flag.h"
 
 using namespace tinyrt;
@@ -43,6 +44,15 @@ using namespace std::literals;
 
 constexpr char kOBJPath[] = "-obj";
 constexpr char kOutPath[] = "-out";
+
+std::unique_ptr<KdTree::NodeFactory> createKdTreeNodeFactory() {
+  if (supportsAvx512f()) {
+    return std::make_unique<SimdKdTreeNodeFactory<AVX512Vec3>>();
+  } else if (supportsAvx2()) {
+    return std::make_unique<SimdKdTreeNodeFactory<AVX2Vec3>>();
+  }
+  return nullptr;
+}
 
 int main(const int argc, const char** argv) {
   Flags<String<kOBJPath>, String<kOutPath>> flags(argc, argv);
@@ -55,8 +65,7 @@ int main(const int argc, const char** argv) {
 
   Camera camera(Vec3(0.f, .8f, 3.93f), Vec3(0.f, 0.f, -1.f),
                 Vec3(0.f, 1.f, 0.f), 32.f);
-  KdTreeIntersecter intersecter(
-      std::make_unique<SimdKdTreeNodeFactory<AVX512Vec3>>());
+  KdTreeIntersecter intersecter(createKdTreeNodeFactory());
   PhongShader shader;
   PathTracer rayTracer;
   intersecter.initialize(*scene);

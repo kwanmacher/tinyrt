@@ -29,8 +29,6 @@
 
 namespace tinyrt {
 
-static constexpr auto kEpsilon = 1e-5f;
-
 void KdTreeIntersecter::initialize(const Scene& scene) {
   kdTree_ = std::make_unique<KdTree>(scene, std::move(nodeFactory_));
 }

@@ -28,7 +28,8 @@
 namespace tinyrt {
 class KdTreeIntersecter final : public Intersecter {
  public:
-  explicit KdTreeIntersecter(std::unique_ptr<KdTree::NodeFactory> nodeFactory)
+  explicit KdTreeIntersecter(
+      std::unique_ptr<KdTree::NodeFactory> nodeFactory = nullptr)
       : nodeFactory_(std::move(nodeFactory)) {}
 
   void initialize(const Scene& scene) override;

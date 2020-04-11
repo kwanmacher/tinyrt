@@ -22,18 +22,7 @@
 
 #pragma once
 
-#include "core/bounding_box.h"
-#include "core/ray.h"
-#include "core/simd_triangle.h"
-#include "core/triangle.h"
-
 namespace tinyrt {
-std::optional<Intersection> intersect(const Ray& ray, const Triangle& triangle);
-
-template <typename T>
-std::optional<Intersection> intersect(const Ray& ray, const T& triangles,
-                                      const float tEntry, const float tExit);
-
-std::optional<std::pair<float, float>> intersect(const Ray& ray,
-                                                 const BoundingBox& aabb);
+inline bool supportsAvx2() { return __builtin_cpu_supports("avx2"); }
+inline bool supportsAvx512f() { return __builtin_cpu_supports("avx512f"); }
 }  // namespace tinyrt
