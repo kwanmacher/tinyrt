@@ -131,9 +131,9 @@ int main(const int argc, const char** argv) {
             << "s.";
 
   std::ofstream ppm(flags.get<kOutPath>());
-  ppm << "P3";
-  ppm << width << " " << height;
-  ppm << "255";
+  ppm << "P3" << std::endl;
+  ppm << width << " " << height << std::endl;
+  ppm << "255" << std::endl;
   int total = 0;
   for (auto i = 0; i < height; ++i) {
     for (auto j = 0; j < width; ++j) {
