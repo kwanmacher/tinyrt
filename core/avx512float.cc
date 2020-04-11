@@ -20,25 +20,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#pragma once
-
-#include "core/bounding_box.h"
-#include "core/ray.h"
-#include "core/simd_triangle.h"
-#include "core/triangle.h"
+#include "core/avx512float.h"
 
 namespace tinyrt {
-std::optional<Intersection> intersect(const Ray& ray, const Triangle& triangle);
+template <>
+const tinyrt::AVX512Float min<tinyrt::AVX512Float>(
+    const tinyrt::AVX512Float& a, const tinyrt::AVX512Float& b) {
+  return _mm512_min_ps(a.avx, b.avx);
+}
 
-std::optional<Intersection> intersect(const Ray& ray,
-                                      const AVX2Triangle& triangles,
-                                      const float tEntry, const float tExit);
-
-// TODO(kaikaiwang): Merge with the AVX2 version.
-std::optional<Intersection> intersect(const Ray& ray,
-                                      const AVX512Triangle& triangles,
-                                      const float tEntry, const float tExit);
-
-std::optional<std::pair<float, float>> intersect(const Ray& ray,
-                                                 const BoundingBox& aabb);
+template <>
+const tinyrt::AVX512Float max<tinyrt::AVX512Float>(
+    const tinyrt::AVX512Float& a, const tinyrt::AVX512Float& b) {
+  return _mm512_max_ps(a.avx, b.avx);
+}
 }  // namespace tinyrt
+
+namespace std {
+tinyrt::AVX512Float sqrt(const tinyrt::AVX512Float& f) {
+  return _mm512_sqrt_ps(f.avx);
+}
+
+tinyrt::AVX512Float abs(const tinyrt::AVX512Float& f) {
+  return _mm512_abs_ps(f.avx);
+}
+}  // namespace std

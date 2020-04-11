@@ -33,7 +33,9 @@ namespace {
 static constexpr auto kMaxDepth = 15U;
 static constexpr auto kEpsilon = 1e-4f;
 static constexpr auto kTraversal = 1.f;
-static constexpr auto kIntersect = 1.5f;
+
+// TODO(kaikaiwang): Return this from KdTree node factory.
+static constexpr auto kIntersect = .5f;
 
 class DefaultNode final : public KdTree::Node {
  public:
@@ -129,7 +131,7 @@ static KdTree::NodePtr build(std::vector<const Triangle*> triangles,
   if (triangles.empty()) {
     return nullptr;
   }
-  if (triangles.size() <= 3 || depth >= kMaxDepth) {
+  if (triangles.size() <= 16 || depth >= kMaxDepth) {
     return nodeFactory.createLeaf(std::move(triangles));
   }
   const float maxFloat = std::numeric_limits<float>::max();

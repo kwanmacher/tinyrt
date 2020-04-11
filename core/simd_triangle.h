@@ -25,6 +25,7 @@
 #include <algorithm>
 
 #include "core/avx2float.h"
+#include "core/avx512float.h"
 #include "core/triangle.h"
 
 namespace tinyrt {
@@ -44,6 +45,9 @@ struct SimdTriangle final {
 
 using AVX2Vec3 = Vec3T<AVX2Float>;
 using AVX2Triangle = SimdTriangle<AVX2Vec3>;
+
+using AVX512Vec3 = Vec3T<AVX512Float, AVX512FMask>;
+using AVX512Triangle = SimdTriangle<AVX512Vec3>;
 
 template <typename TVec3>
 std::vector<SimdTriangle<TVec3>> buildSimdTriangles(
