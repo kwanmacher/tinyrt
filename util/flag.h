@@ -26,9 +26,17 @@
 #include <sstream>
 #include <string_view>
 #include <tuple>
+#include <vector>
 
 namespace tinyrt {
 constexpr char kEmpty[] = "";
+
+void initFlags(const int argc, const char* argv[]);
+
+namespace detail {
+using args_t = std::vector<std::pair<std::string, std::string>>;
+const args_t& args(std::optional<args_t> = std::nullopt);
+}  // namespace detail
 
 template <const char* Name, typename T, T Default>
 struct Flag {
@@ -61,9 +69,10 @@ struct Bool final : public Flag<Name, bool, Default> {
 template <typename... T>
 class Flags final {
  public:
-  explicit Flags(const int argc, const char* argv[]) {
-    for (auto i = 1; i < argc; i += 2) {
-      set(argv[i], argv[i + 1], std::make_index_sequence<sizeof...(T)>{});
+  Flags() {
+    for (const auto& arg : detail::args()) {
+      set(arg.first.c_str(), arg.second.c_str(),
+          std::make_index_sequence<sizeof...(T)>{});
     }
   }
 

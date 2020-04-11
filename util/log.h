@@ -66,7 +66,7 @@ class Log final {
             << line << ": ";
   }
 
-  ~Log() { std::cout << stream_.str() << std::endl; }
+  ~Log() { std::cerr << stream_.str() << std::endl; }
 
   std::ostringstream& stream() { return stream_; }
 

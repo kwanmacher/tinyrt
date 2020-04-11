@@ -58,7 +58,8 @@ std::unique_ptr<KdTree::NodeFactory> createKdTreeNodeFactory() {
 }
 
 int main(const int argc, const char** argv) {
-  Flags<String<kOBJPath>, String<kOutPath>> flags(argc, argv);
+  initFlags(argc, argv);
+  Flags<String<kOBJPath>, String<kOutPath>> flags;
 
   Obj cornellBox(flags.get<kOBJPath>());
   LOG(INFO) << "OBJ file loaded: " << cornellBox;
@@ -138,7 +139,7 @@ int main(const int argc, const char** argv) {
         ppm << clamped << " ";
       }
       if (++total % 5 == 0) {
-        ppm;
+        ppm << std::endl;
       }
     }
   }
