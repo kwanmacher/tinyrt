@@ -120,17 +120,19 @@ class AVX2Float final {
   bool operator!() const { return _mm256_testz_ps(avx, avx); }
 
   int8_t minIndex() const {
-    __m256 vmin = _mm256_min_ps(avx, _mm256_castsi256_ps(_mm256_srli_epi32(
-                                         _mm256_castps_si256(avx), 4)));
+    __m256 vmin = _mm256_min_ps(
+        avx, _mm256_castsi256_ps(_mm256_alignr_epi8(
+                 _mm256_castps_si256(avx), _mm256_castps_si256(avx), 4)));
 
-    vmin = _mm256_min_ps(vmin, _mm256_castsi256_ps(_mm256_srli_epi32(
-                                   _mm256_castps_si256(avx), 2)));
+    vmin = _mm256_min_ps(
+        vmin, _mm256_castsi256_ps(_mm256_alignr_epi8(
+                  _mm256_castps_si256(vmin), _mm256_castps_si256(vmin), 8)));
 
-    vmin = _mm256_min_ps(vmin, _mm256_castsi256_ps(_mm256_srli_epi32(
-                                   _mm256_castps_si256(avx), 1)));
+    vmin = _mm256_min_ps(
+        vmin, _mm256_castsi256_ps(_mm256_permute2x128_si256(
+                  _mm256_castps_si256(vmin), _mm256_castps_si256(vmin), 0x01)));
 
-    __m256 vcmp =
-        _mm256_cmp_ps(avx, _mm256_set1_ps(_mm256_cvtss_f32(vmin)), _CMP_EQ_OQ);
+    __m256 vcmp = _mm256_cmp_ps(avx, vmin, _CMP_EQ_OQ);
 
     uint32_t mask = _mm256_movemask_ps(vcmp);
     return mask == 0 ? -1 : __builtin_ctz(mask);
@@ -143,6 +145,8 @@ class AVX2Float final {
   friend AVX2Float operator/(const float a, const AVX2Float& b) {
     return AVX2Float(a) / b;
   }
+
+  friend std::ostream& operator<<(std::ostream& os, const AVX2Float& avx2float);
 
  public:
   alignas(16) union {

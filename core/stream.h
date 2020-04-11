@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include "core/avx2float.h"
 #include "core/bounding_box.h"
 #include "core/obj.h"
 #include "core/scene.h"
@@ -87,6 +88,18 @@ std::ostream& operator<<(std::ostream& os, const BoundingBox& bb) {
 
 std::ostream& operator<<(std::ostream& os, const Light& light) {
   os << "Light{aabb=" << light.aabb << "}";
+  return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const AVX2Float& avx2float) {
+  os << "{";
+  for (auto i = 0; i < 8; ++i) {
+    if (i > 0) {
+      os << ",";
+    }
+    os << avx2float.v[i];
+  }
+  os << "}";
   return os;
 }
 }  // namespace tinyrt

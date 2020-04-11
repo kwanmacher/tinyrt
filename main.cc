@@ -56,7 +56,7 @@ int main(const int argc, const char** argv) {
   Camera camera(Vec3(0.f, .8f, 3.93f), Vec3(0.f, 0.f, -1.f),
                 Vec3(0.f, 1.f, 0.f), 32.f);
   KdTreeIntersecter intersecter(
-      nullptr);  // (std::make_unique<SimdKdTreeNodeFactory<AVX2Vec3>>());
+      std::make_unique<SimdKdTreeNodeFactory<AVX2Vec3>>());
   PhongShader shader;
   PathTracer rayTracer;
   intersecter.initialize(*scene);
@@ -71,7 +71,7 @@ int main(const int argc, const char** argv) {
   std::promise<void> promise;
 
   const TraceOptions options{
-      .directRays = 300,
+      .directRays = 500,
       .indirectRays = 1,
       .shadowRays = 1,
   };

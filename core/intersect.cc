@@ -81,7 +81,8 @@ std::optional<Intersection> intersect(const Ray& ray,
     return std::nullopt;
   }
   auto t = f * ac.dot(q);
-  pass = pass && (t > EPSILON) && (t <= tExit) && (t >= tEntry);
+  pass = pass && (t > EPSILON) && (t <= EPSILON + tExit) &&
+         (t + EPSILON >= tEntry);
   if (!pass) {
     return std::nullopt;
   }
