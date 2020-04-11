@@ -23,7 +23,6 @@
 #include <chrono>
 #include <fstream>
 #include <future>
-#include <iostream>
 #include <random>
 
 #include "core/basic_intersecter.h"
@@ -38,6 +37,7 @@
 #include "util/async.h"
 #include "util/capabilities.h"
 #include "util/flag.h"
+#include "util/log.h"
 
 using namespace tinyrt;
 using namespace std::literals;
@@ -47,10 +47,13 @@ constexpr char kOutPath[] = "-out";
 
 std::unique_ptr<KdTree::NodeFactory> createKdTreeNodeFactory() {
   if (supportsAvx512f()) {
+    LOG(INFO) << "Enabled AVX512F support";
     return std::make_unique<SimdKdTreeNodeFactory<AVX512Vec3>>();
   } else if (supportsAvx2()) {
+    LOG(INFO) << "Enabled AVX2 support";
     return std::make_unique<SimdKdTreeNodeFactory<AVX2Vec3>>();
   }
+  LOG(INFO) << "No AVX support detected, fallback to default";
   return nullptr;
 }
 
@@ -58,10 +61,10 @@ int main(const int argc, const char** argv) {
   Flags<String<kOBJPath>, String<kOutPath>> flags(argc, argv);
 
   Obj cornellBox(flags.get<kOBJPath>());
-  std::cout << "OBJ file loaded: " << cornellBox << std::endl;
+  LOG(INFO) << "OBJ file loaded: " << cornellBox;
 
   auto scene = std::move(cornellBox).moveToScene();
-  std::cout << "Scene created: " << *scene << std::endl;
+  LOG(INFO) << "Scene created: " << *scene;
 
   Camera camera(Vec3(0.f, .8f, 3.93f), Vec3(0.f, 0.f, -1.f),
                 Vec3(0.f, 1.f, 0.f), 32.f);
@@ -86,7 +89,7 @@ int main(const int argc, const char** argv) {
   };
   auto rayGenerator = camera.adapt(width, height);
 
-  std::cout << "Rendering started." << std::endl;
+  LOG(INFO) << "Rendering started.";
   const auto begin = std::chrono::steady_clock::now();
   for (auto i = 0; i < width; i += block) {
     for (auto j = 0; j < height; j += block) {
@@ -106,27 +109,26 @@ int main(const int argc, const char** argv) {
         }
         const auto completedBlocks = ++completed;
         if (completedBlocks % (totalBlocks / 100) == 0) {
-          std::cout << "Finished " << completedBlocks << "/" << totalBlocks
-                    << std::endl;
+          LOG(INFO) << "Finished " << completedBlocks << "/" << totalBlocks;
         }
         if (completedBlocks == totalBlocks) {
-          std::cout << "Completed!" << std::endl;
+          LOG(INFO) << "Completed!";
           promise.set_value();
         }
       });
     }
   }
   promise.get_future().wait();
-  std::cout << "Rendering finished. Time elapsed="
+  LOG(INFO) << "Rendering finished. Time elapsed="
             << std::chrono::duration_cast<std::chrono::seconds>(
                    std::chrono::steady_clock::now() - begin)
                    .count()
-            << "s." << std::endl;
+            << "s.";
 
   std::ofstream ppm(flags.get<kOutPath>());
-  ppm << "P3" << std::endl;
-  ppm << width << " " << height << std::endl;
-  ppm << "255" << std::endl;
+  ppm << "P3";
+  ppm << width << " " << height;
+  ppm << "255";
   int total = 0;
   for (auto i = 0; i < height; ++i) {
     for (auto j = 0; j < width; ++j) {
@@ -136,7 +138,7 @@ int main(const int argc, const char** argv) {
         ppm << clamped << " ";
       }
       if (++total % 5 == 0) {
-        ppm << std::endl;
+        ppm;
       }
     }
   }

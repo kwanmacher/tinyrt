@@ -3,17 +3,17 @@
 #include "util/async.h"
 
 #include <future>
-#include <iostream>
 #include <mutex>
 #include <queue>
+
+#include "util/log.h"
 
 namespace tinyrt {
 namespace {
 class ThreadPool final {
  public:
   explicit ThreadPool(unsigned num_threads) {
-    std::cout << "Thread pool created with " << num_threads << " threads."
-              << std::endl;
+    LOG(INFO) << "Thread pool created with " << num_threads << " threads.";
     for (auto i = 0U; i < num_threads; ++i) {
       workers_.push_back(std::async(std::launch::async, [this] {
         while (true) {
