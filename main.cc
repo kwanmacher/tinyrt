@@ -44,12 +44,16 @@ using namespace std::literals;
 
 constexpr char kOBJPath[] = "-obj";
 constexpr char kOutPath[] = "-out";
+constexpr char kForceAvx[] = "-force-avx";
 
 std::unique_ptr<KdTree::NodeFactory> createKdTreeNodeFactory() {
-  if (supportsAvx512f()) {
+  Flags<Int<kForceAvx, -1>> avxFlags;
+  const auto forceAvxVer = avxFlags.get<kForceAvx>();
+  const auto hasOverride = forceAvxVer != -1;
+  if ((supportsAvx512f() && !hasOverride) || forceAvxVer == 512) {
     LOG(INFO) << "Enabled AVX512F support";
     return std::make_unique<SimdKdTreeNodeFactory<AVX512Vec3>>();
-  } else if (supportsAvx2()) {
+  } else if ((supportsAvx2() && !hasOverride) || forceAvxVer == 2) {
     LOG(INFO) << "Enabled AVX2 support";
     return std::make_unique<SimdKdTreeNodeFactory<AVX2Vec3>>();
   }
