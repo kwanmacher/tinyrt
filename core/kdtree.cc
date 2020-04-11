@@ -37,11 +37,12 @@ static constexpr auto kIntersect = 1.5f;
 
 class DefaultNode final : public KdTree::Node {
  public:
-  const std::optional<SplitPlane>& split() const override { return split_; }
+  DefaultNode(const std::optional<SplitPlane>& split, KdTree::NodePtr left,
+              KdTree::NodePtr right)
+      : KdTree::Node(split, std::move(left), std::move(right)) {}
 
-  const KdTree::NodePtr& left() const override { return left_; }
-
-  const KdTree::NodePtr& right() const override { return right_; }
+  explicit DefaultNode(std::vector<const Triangle*> triangles)
+      : triangles_(std::move(triangles)) {}
 
   std::optional<Intersection> intersect(const Ray& ray, const float tEntry,
                                         const float tExit) const override {
@@ -58,17 +59,7 @@ class DefaultNode final : public KdTree::Node {
     return intersection;
   }
 
-  DefaultNode(const std::optional<SplitPlane>& split, KdTree::NodePtr left,
-              KdTree::NodePtr right)
-      : split_(split), left_(std::move(left)), right_(std::move(right)) {}
-
-  explicit DefaultNode(std::vector<const Triangle*> triangles)
-      : triangles_(std::move(triangles)) {}
-
  private:
-  const std::optional<SplitPlane> split_;
-  const KdTree::NodePtr left_;
-  const KdTree::NodePtr right_;
   const std::vector<const Triangle*> triangles_;
 };
 

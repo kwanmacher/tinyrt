@@ -51,6 +51,50 @@ std::optional<Intersection> intersect(const Ray& ray,
   return Intersection(ray, t, Vec3(u, v, 0.f), triangle, triangle.material());
 }
 
+std::optional<Intersection> intersect(const Ray& ray,
+                                      const AVX2Triangle& triangles,
+                                      const float tEntry, const float tExit) {
+  static const AVX2Float EPSILON = 1e-6f;
+  static const AVX2Float ZERO = 0.f;
+  static const AVX2Float ONE = 1.f;
+  AVX2Vec3 origin(ray.origin->x, ray.origin->y, ray.origin->z);
+  AVX2Vec3 direction(ray.direction->x, ray.direction->y, ray.direction->z);
+  auto ab = triangles.b() - triangles.a();
+  auto ac = triangles.c() - triangles.a();
+  auto h = direction.cross(ac);
+  auto a = ab.dot(h);
+  auto pass = std::abs(a) >= EPSILON;
+  if (!pass) {
+    return std::nullopt;
+  }
+  auto f = 1.f / a;
+  auto s = origin - triangles.a();
+  auto u = f * s.dot(h);
+  pass = pass && (u >= ZERO) && (u <= ONE);
+  if (!pass) {
+    return std::nullopt;
+  }
+  auto q = s.cross(ab);
+  auto v = f * direction.dot(q);
+  pass = pass && (v >= ZERO) && (u + v <= ONE);
+  if (!pass) {
+    return std::nullopt;
+  }
+  auto t = f * ac.dot(q);
+  pass = pass && (t > EPSILON) && (t <= tExit) && (t >= tEntry);
+  if (!pass) {
+    return std::nullopt;
+  }
+  t = t.retain(pass, std::numeric_limits<float>::max());
+  const auto idx = t.minIndex();
+  if (idx < 0) {
+    return std::nullopt;
+  }
+  const auto& triangle = *triangles.sources[idx];
+  return Intersection(ray, t.v[idx], Vec3(u.v[idx], v.v[idx], 0.f), triangle,
+                      triangle.material());
+}
+
 std::optional<std::pair<float, float>> intersect(const Ray& ray,
                                                  const BoundingBox& aabb) {
   float tmin = (aabb.min()->x - ray.origin->x) / ray.direction->x;

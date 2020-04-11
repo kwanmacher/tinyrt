@@ -60,13 +60,25 @@ struct SplitPlane {
 
 class KdTree::Node {
  public:
+  Node() = default;
+  Node(const std::optional<SplitPlane>& split, KdTree::NodePtr left,
+       KdTree::NodePtr right)
+      : split_(split), left_(std::move(left)), right_(std::move(right)) {}
+
   virtual ~Node() = default;
-  virtual const std::optional<SplitPlane>& split() const = 0;
-  virtual const KdTree::NodePtr& left() const = 0;
-  virtual const KdTree::NodePtr& right() const = 0;
+
+  const std::optional<SplitPlane>& split() const { return split_; }
+  const KdTree::NodePtr& left() const { return left_; }
+  const KdTree::NodePtr& right() const { return right_; }
+
   virtual std::optional<Intersection> intersect(const Ray& ray,
                                                 const float tEntry,
                                                 const float tExit) const = 0;
+
+ private:
+  const std::optional<SplitPlane> split_;
+  const KdTree::NodePtr left_;
+  const KdTree::NodePtr right_;
 };
 
 class KdTree::NodeFactory {

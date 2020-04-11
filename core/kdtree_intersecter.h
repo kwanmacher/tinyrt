@@ -28,6 +28,9 @@
 namespace tinyrt {
 class KdTreeIntersecter final : public Intersecter {
  public:
+  explicit KdTreeIntersecter(std::unique_ptr<KdTree::NodeFactory> nodeFactory)
+      : nodeFactory_(std::move(nodeFactory)) {}
+
   void initialize(const Scene& scene) override;
   std::optional<Intersection> intersect(const Ray& ray) const override;
 
@@ -38,6 +41,7 @@ class KdTreeIntersecter final : public Intersecter {
                                                 const float t1) const;
 
  private:
+  std::unique_ptr<KdTree::NodeFactory> nodeFactory_;
   std::unique_ptr<KdTree> kdTree_;
 };
 }  // namespace tinyrt

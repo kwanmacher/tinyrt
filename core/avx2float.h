@@ -24,10 +24,12 @@
 
 #include <immintrin.h>
 
+#include "util/algorithm.h"
+
 namespace tinyrt {
 class AVX2Float final {
  public:
-  explicit AVX2Float(float const* source) : avx(_mm256_load_ps(source)) {}
+  /*implicit*/ AVX2Float(float const* source) : avx(_mm256_load_ps(source)) {}
   /*implicit*/ AVX2Float(const float source) : avx(_mm256_set1_ps(source)) {}
   /*implicit*/ AVX2Float(const __m256 source) : avx(source) {}
 
@@ -95,27 +97,70 @@ class AVX2Float final {
     return _mm256_or_ps(avx, other.avx);
   }
 
+  AVX2Float operator>(const float other) const {
+    return *this > AVX2Float(other);
+  }
+
+  AVX2Float operator>=(const float other) const {
+    return *this >= AVX2Float(other);
+  }
+
+  AVX2Float operator<(const float other) const {
+    return *this < AVX2Float(other);
+  }
+
+  AVX2Float operator<=(const float other) const {
+    return *this <= AVX2Float(other);
+  }
+
+  AVX2Float operator==(const float other) const {
+    return *this == AVX2Float(other);
+  }
+
+  bool operator!() const { return _mm256_testz_ps(avx, avx); }
+
+  int8_t minIndex() const {
+    __m256 vmin = _mm256_min_ps(avx, _mm256_castsi256_ps(_mm256_srli_epi32(
+                                         _mm256_castps_si256(avx), 4)));
+
+    vmin = _mm256_min_ps(vmin, _mm256_castsi256_ps(_mm256_srli_epi32(
+                                   _mm256_castps_si256(avx), 2)));
+
+    vmin = _mm256_min_ps(vmin, _mm256_castsi256_ps(_mm256_srli_epi32(
+                                   _mm256_castps_si256(avx), 1)));
+
+    __m256 vcmp =
+        _mm256_cmp_ps(avx, _mm256_set1_ps(_mm256_cvtss_f32(vmin)), _CMP_EQ_OQ);
+
+    uint32_t mask = _mm256_movemask_ps(vcmp);
+    return mask == 0 ? -1 : __builtin_ctz(mask);
+  }
+
+  AVX2Float retain(const AVX2Float& mask, const float replace) const {
+    return _mm256_blendv_ps(_mm256_set1_ps(replace), avx, mask.avx);
+  }
+
+  friend AVX2Float operator/(const float a, const AVX2Float& b) {
+    return AVX2Float(a) / b;
+  }
+
  public:
-  __m256 avx;
+  alignas(16) union {
+    __m256 avx;
+    float v[8];
+  };
 };
+
+template <>
+const tinyrt::AVX2Float min<tinyrt::AVX2Float>(const tinyrt::AVX2Float& a,
+                                               const tinyrt::AVX2Float& b);
+
+template <>
+const tinyrt::AVX2Float max<tinyrt::AVX2Float>(const tinyrt::AVX2Float& a,
+                                               const tinyrt::AVX2Float& b);
 }  // namespace tinyrt
 
 namespace std {
-tinyrt::AVX2Float sqrt(const tinyrt::AVX2Float& f) {
-  return _mm256_sqrt_ps(f.avx);
-}
-
-tinyrt::AVX2Float abs(const tinyrt::AVX2Float& f) {
-  static const __m256 kSignMask =
-      _mm256_castsi256_ps(_mm256_set1_epi32(1 << 31));
-  return _mm256_andnot_ps(kSignMask, f.avx);
-}
-
-tinyrt::AVX2Float min(const tinyrt::AVX2Float& a, const tinyrt::AVX2Float& b) {
-  return _mm256_min_ps(a.avx, b.avx);
-}
-
-tinyrt::AVX2Float max(const tinyrt::AVX2Float& a, const tinyrt::AVX2Float& b) {
-  return _mm256_max_ps(a.avx, b.avx);
-}
+tinyrt::AVX2Float sqrt(const tinyrt::AVX2Float& f);
+tinyrt::AVX2Float abs(const tinyrt::AVX2Float& f);
 }  // namespace std

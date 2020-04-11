@@ -27,10 +27,15 @@
 #include <iostream>
 #include <tuple>
 
+#include "util/algorithm.h"
+
 namespace tinyrt {
 template <typename TFloat, typename TBool = TFloat>
 class Vec3T {
   using vec3_t = Vec3T<TFloat, TBool>;
+
+ public:
+  using float_type = TFloat;
 
  public:
   Vec3T() : Vec3T(.0f, .0f, .0f) {}
@@ -141,23 +146,23 @@ class Vec3T {
   }
 
   inline vec3_t max(const vec3_t& other) {
-    return vec3_t(std::max(v_.x, other->x), std::max(v_.y, other->y),
-                  std::max(v_.z, other->z));
+    return vec3_t(tinyrt::max(v_.x, other->x), tinyrt::max(v_.y, other->y),
+                  tinyrt::max(v_.z, other->z));
   }
 
   inline vec3_t min(const vec3_t& other) {
-    return vec3_t(std::min(v_.x, other->x), std::min(v_.y, other->y),
-                  std::min(v_.z, other->z));
+    return vec3_t(tinyrt::min(v_.x, other->x), tinyrt::min(v_.y, other->y),
+                  tinyrt::min(v_.z, other->z));
   }
 
   inline vec3_t max(const TFloat other) {
-    return vec3_t(std::max(v_.x, other), std::max(v_.y, other),
-                  std::max(v_.z, other));
+    return vec3_t(tinyrt::max(v_.x, other), tinyrt::max(v_.y, other),
+                  tinyrt::max(v_.z, other));
   }
 
   inline vec3_t min(const TFloat other) {
-    return vec3_t(std::min(v_.x, other), std::min(v_.y, other),
-                  std::min(v_.z, other));
+    return vec3_t(tinyrt::min(v_.x, other), tinyrt::min(v_.y, other),
+                  tinyrt::min(v_.z, other));
   }
 
   inline std::tuple<vec3_t, vec3_t, vec3_t> basis() const {

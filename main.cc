@@ -33,6 +33,7 @@
 #include "core/path_tracer.h"
 #include "core/phong_shader.h"
 #include "core/ray_tracer.h"
+#include "core/simd_kdtree_node.h"
 #include "core/stream.h"
 #include "util/async.h"
 #include "util/flag.h"
@@ -54,7 +55,8 @@ int main(const int argc, const char** argv) {
 
   Camera camera(Vec3(0.f, .8f, 3.93f), Vec3(0.f, 0.f, -1.f),
                 Vec3(0.f, 1.f, 0.f), 32.f);
-  KdTreeIntersecter intersecter;
+  KdTreeIntersecter intersecter(
+      nullptr);  // (std::make_unique<SimdKdTreeNodeFactory<AVX2Vec3>>());
   PhongShader shader;
   PathTracer rayTracer;
   intersecter.initialize(*scene);

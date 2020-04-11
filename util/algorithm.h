@@ -22,18 +22,16 @@
 
 #pragma once
 
-#include "core/bounding_box.h"
-#include "core/ray.h"
-#include "core/simd_triangle.h"
-#include "core/triangle.h"
+#include <algorithm>
 
 namespace tinyrt {
-std::optional<Intersection> intersect(const Ray& ray, const Triangle& triangle);
+template <typename T>
+const T min(const T& a, const T& b) {
+  return std::min(a, b);
+}
 
-std::optional<Intersection> intersect(const Ray& ray,
-                                      const AVX2Triangle& triangles,
-                                      const float tEntry, const float tExit);
-
-std::optional<std::pair<float, float>> intersect(const Ray& ray,
-                                                 const BoundingBox& aabb);
+template <typename T>
+const T max(const T& a, const T& b) {
+  return std::max(a, b);
+}
 }  // namespace tinyrt

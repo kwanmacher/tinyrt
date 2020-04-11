@@ -22,18 +22,30 @@
 
 #pragma once
 
-#include "core/bounding_box.h"
-#include "core/ray.h"
-#include "core/simd_triangle.h"
-#include "core/triangle.h"
+#include "core/avx2float.h"
 
 namespace tinyrt {
-std::optional<Intersection> intersect(const Ray& ray, const Triangle& triangle);
+template <>
+const tinyrt::AVX2Float min<tinyrt::AVX2Float>(const tinyrt::AVX2Float& a,
+                                               const tinyrt::AVX2Float& b) {
+  return _mm256_min_ps(a.avx, b.avx);
+}
 
-std::optional<Intersection> intersect(const Ray& ray,
-                                      const AVX2Triangle& triangles,
-                                      const float tEntry, const float tExit);
-
-std::optional<std::pair<float, float>> intersect(const Ray& ray,
-                                                 const BoundingBox& aabb);
+template <>
+const tinyrt::AVX2Float max<tinyrt::AVX2Float>(const tinyrt::AVX2Float& a,
+                                               const tinyrt::AVX2Float& b) {
+  return _mm256_max_ps(a.avx, b.avx);
+}
 }  // namespace tinyrt
+
+namespace std {
+tinyrt::AVX2Float sqrt(const tinyrt::AVX2Float& f) {
+  return _mm256_sqrt_ps(f.avx);
+}
+
+tinyrt::AVX2Float abs(const tinyrt::AVX2Float& f) {
+  static const __m256 kSignMask =
+      _mm256_castsi256_ps(_mm256_set1_epi32(1 << 31));
+  return _mm256_andnot_ps(kSignMask, f.avx);
+}
+}  // namespace std

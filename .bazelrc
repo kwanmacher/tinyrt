@@ -1,4 +1,6 @@
 build --cxxopt="-std=c++2a"
 build --cxxopt="-O3"
+build --cxxopt="-mavx"
+build --cxxopt="-mavx2"
 build --cxxopt="-pthread"
 build --linkopt="-pthread"
